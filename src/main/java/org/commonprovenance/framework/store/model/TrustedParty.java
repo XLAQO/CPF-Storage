@@ -54,8 +54,8 @@ public class TrustedParty {
     this.name = name;
     this.certificate = certificate;
     this.url = Optional.ofNullable(url);
-    this.isChecked = false;
-    this.isValid = false;
+    this.isChecked = true;
+    this.isValid = true;
     this.isDefault = isDefault;
   }
 
@@ -64,8 +64,8 @@ public class TrustedParty {
     this.name = name;
     this.certificate = certificate;
     this.url = Optional.empty();
-    this.isChecked = false;
-    this.isValid = false;
+    this.isChecked = true;
+    this.isValid = true;
     this.isDefault = false;
   }
 

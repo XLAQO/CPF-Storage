@@ -10,7 +10,6 @@ import org.commonprovenance.framework.store.persistence.finalizedProvComponent.O
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.springframework.stereotype.Service;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -23,14 +22,16 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Mono<Organization> storeOrganization(Organization organization) {
+  public Mono<Void> storeOrganization(Organization organization) {
     return MONO.<Organization> makeSureNotNullWithMessage("Organization can not be null")
         .apply(organization)
-        .flatMap(this.persistence::create);
+        .delayUntil(this.persistence::create)
+        .delayUntil(this.persistence::connectTrustedParty)
+        .then();
   }
 
   @Override
-  public Mono<Organization> updateOrganization(Organization organization) {
+  public Mono<Void> updateOrganization(Organization organization) {
     return MONO.<Organization> makeSureNotNullWithMessage("Organization can not be null")
         .apply(organization)
         .flatMap(this.persistence::update);
@@ -72,11 +73,6 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Flux<Organization> getAllOrganizations() {
-    return this.persistence.getAll();
-  }
-
-  @Override
   public Mono<Organization> getOrganizationByIdentifier(String identifier) {
     return this.persistence.getByIdentifier(identifier);
   }
@@ -90,7 +86,7 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Mono<Boolean> linkOwnedDocument(Document document) {
+  public Mono<Void> linkOwnedDocument(Document document) {
     return this.persistence.connectDocument(document);
   }
 

@@ -1,54 +1,108 @@
 package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j;
 
+import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+
 import java.util.NoSuchElementException;
 
 import org.commonprovenance.framework.store.exceptions.ConflictException;
+import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.OrganizationNode;
+import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
+import org.commonprovenance.framework.store.model.Document;
+import org.commonprovenance.framework.store.model.Organization;
+import org.commonprovenance.framework.store.model.TrustedParty;
+import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.OrganizationRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j.client.OrganizationNeo4jRepositoryClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Profile("live & neo4j")
 @Repository
 public class OrganizationNeo4jRepository implements OrganizationRepository {
+  private final String LOG_PREFIX = "OrganizationNeo4jRepository: ";
+  private static final Logger LOGGER = LoggerFactory.getLogger(OrganizationNeo4jRepository.class);
+
   private final OrganizationNeo4jRepositoryClient client;
 
-  public OrganizationNeo4jRepository(
-      OrganizationNeo4jRepositoryClient client) {
+  public OrganizationNeo4jRepository(OrganizationNeo4jRepositoryClient client) {
     this.client = client;
   }
 
   @Override
-  public Mono<OrganizationNode> save(OrganizationNode organization) {
-    return client.save(organization);
+  public Mono<Void> save(Organization organization) {
+    return Mono.just(organization)
+        .map(NodeFactory::toEntity)
+        .flatMap(client::save)
+        .then()
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization has been saved into DB."))
+        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Organization has not been saved into DB!\n" + throwable.getMessage()))
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Organization has not been saved into DB!")));
   }
 
   @Override
-  public Flux<OrganizationNode> findAll() {
-    return client.findAll();
+  public Mono<Void> connectTrusts(Organization organization) {
+    return MONO.combineM(
+        Mono.just(organization)
+            .map(Organization::getIdentifier),
+        Mono.just(organization)
+            .flatMap(MONO.liftOptionalToMono(Organization::getTrustedParty))
+            .map(TrustedParty::getName),
+        client::createTrustsRelationship)
+        .then()
+        .doOnSuccess(_ -> LOGGER.trace(
+            LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has been connected to TrustedParty with name '"
+                + organization.getTrustedParty().map(TrustedParty::getName).orElse("unknown") + "'."))
+        .doOnError(throwable -> LOGGER.error(
+            LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has not been connected to TrustedParty with name'"
+                + organization.getTrustedParty().map(TrustedParty::getName).orElse("unknown") + "'!\n" + throwable.getMessage()))
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(
+            new InternalApplicationException("Organization has not been connected to TrustedParty!")));
   }
 
   @Override
-  public Mono<OrganizationNode> findByIdentifier(String identifier) {
-    return client.getIdByIdentifier(identifier)
+  public Mono<Organization> findByIdentifier(String identifier) {
+    return Mono.just(identifier)
+        .flatMapMany(client::getIdByIdentifier)
         .single()
-        .flatMap(client::findById)
         .onErrorMap(
             NoSuchElementException.class,
             _ -> new NotFoundException("Organization with identifier '" + identifier + "' has not been found!"))
         .onErrorMap(
             IndexOutOfBoundsException.class,
-            _ -> new ConflictException("There is more then one organization with identifier '" + identifier + "'!"));
+            _ -> new ConflictException("There is more then one organization with identifier '" + identifier + "'!"))
+        .flatMap(client::findById)
+        .switchIfEmpty(Mono.error(() -> new NotFoundException("Organization with identifier '" + identifier + "' has not been found!")))
+        .flatMap(ModelFactory::toDomain)
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + identifier + "' has been found."))
+        .doOnError(NotFoundException.class, exception -> LOGGER.trace(exception.getMessage()))
+        .doOnError(throwable -> {
+          if (throwable instanceof NotFoundException notFound)
+            LOGGER.trace(LOG_PREFIX + notFound.getMessage());
+          else
+            LOGGER.error(LOG_PREFIX + "Search Organization with identifier '" + identifier + "' has been failed!\n" + throwable.getMessage());
+
+        })
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Search Organization with identifier '" + identifier + "' has been failed!")));
+
   }
 
+  // TODO: this should be moved into Document
   @Override
-  public Mono<Boolean> connectOwns(String organizationIdentifier, String documentIdentifier) {
-    return client.createOwnsRelationship(organizationIdentifier, documentIdentifier);
+  public Mono<Void> connectOwns(Document document) {
+    return MONO.combineM(
+        MONO.<String> makeSureNotNullWithMessage("Organization identifier can not be 'null'!")
+            .apply(document.getOrganizationIdentifier()),
+        Mono.justOrEmpty(document.getIdentifier())
+            .flatMap(MONO.<String> makeSureNotNullWithMessage("Document identifier can not be 'null'!")),
+        client::createOwnsRelationship)
+        .then();
+    // ...
   }
 
 }

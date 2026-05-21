@@ -19,9 +19,19 @@ public interface OrganizationNeo4jRepositoryClient extends ReactiveNeo4jReposito
   Flux<String> getIdByIdentifier(@Param("identifier") String identifier);
 
   @Query("""
-        MATCH (o:Organization {identifier: $organizationIdentifier})
-        MATCH (d:Document {identifier: $documentIdentifier})
-        MERGE (o)-[:owns]->(d)
+        MATCH (organization:Organization {identifier: $organizationIdentifier})
+        MATCH (trustedParty:TrustedParty {name: $name})
+        MERGE (organization)-[:trusts]->(trustedParty)
+        RETURN true
+      """)
+  Mono<Boolean> createTrustsRelationship(
+      @Param("organizationIdentifier") String organizationIdentifier,
+      @Param("name") String name);
+
+  @Query("""
+        MATCH (organization:Organization {identifier: $organizationIdentifier})
+        MATCH (document:Document {identifier: $documentIdentifier})
+        MERGE (organization)-[:owns]->(document)
         RETURN true
       """)
   Mono<Boolean> createOwnsRelationship(

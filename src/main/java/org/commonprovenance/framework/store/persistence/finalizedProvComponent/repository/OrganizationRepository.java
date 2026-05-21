@@ -1,17 +1,17 @@
 package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository;
 
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.OrganizationNode;
+import org.commonprovenance.framework.store.model.Document;
+import org.commonprovenance.framework.store.model.Organization;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface OrganizationRepository {
-  Mono<OrganizationNode> save(OrganizationNode organization);
+  Mono<Void> save(Organization organization);
 
-  Flux<OrganizationNode> findAll();
+  Mono<Void> connectTrusts(Organization organization);
 
-  Mono<OrganizationNode> findByIdentifier(String identifier);
+  Mono<Organization> findByIdentifier(String identifier);
 
-  Mono<Boolean> connectOwns(String organizationIdentifier, String documentIdentifier);
+  Mono<Void> connectOwns(Document document);
 
 }

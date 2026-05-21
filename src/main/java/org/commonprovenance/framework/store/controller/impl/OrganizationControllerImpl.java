@@ -35,9 +35,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 import jakarta.validation.constraints.NotNull;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Validated
@@ -88,7 +86,7 @@ public class OrganizationControllerImpl implements OrganizationController {
                                 .delayUntil(this.trustedPartyService::storeTrustedParty)
                             : Mono.error(notFound)))
                 .map(organization::withTrustedParty))
-        .flatMap(this.organizationService::storeOrganization)
+        .delayUntil(this.organizationService::storeOrganization)
         .flatMap(DTOFactory::toDTO);
   }
 
@@ -109,19 +107,7 @@ public class OrganizationControllerImpl implements OrganizationController {
             this.organizationService::exists,
             "Organization with identifier '" + body.getIdentifier() + "' does not exists!")))
         .flatMap(this.trustedPartyWebService::updateOrganization)
-        .flatMap(this.organizationService::updateOrganization)
-        .flatMap(DTOFactory::toDTO);
-  }
-
-  @GetMapping()
-  @NotNull
-  @Operation(summary = "List organizations")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Organizations fetched"),
-      @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
-  })
-  public Flux<OrganizationResponseDTO> getAllOrganizations() {
-    return this.organizationService.getAllOrganizations()
+        .delayUntil(this.organizationService::updateOrganization)
         .flatMap(DTOFactory::toDTO);
   }
 

@@ -13,7 +13,6 @@ import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.TokenRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j.client.TokenNeo4jRepositoryClient;
-import org.commonprovenance.framework.store.persistence.metaComponent.neo4j.MetaBundleNeo4jRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -24,13 +23,12 @@ import reactor.core.publisher.Mono;
 @Profile("live & neo4j")
 @Repository
 public class TokenNeo4jRepository implements TokenRepository {
-  private final String LOG_PREFIX = "TrustedPartyNeo4jRepository: ";
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaBundleNeo4jRepository.class);
+  private final String LOG_PREFIX = "TokenNeo4jRepository: ";
+  private static final Logger LOGGER = LoggerFactory.getLogger(TokenNeo4jRepository.class);
 
   private final TokenNeo4jRepositoryClient client;
 
-  public TokenNeo4jRepository(
-      TokenNeo4jRepositoryClient client) {
+  public TokenNeo4jRepository(TokenNeo4jRepositoryClient client) {
     this.client = client;
   }
 
@@ -40,14 +38,15 @@ public class TokenNeo4jRepository implements TokenRepository {
         .flatMap(NodeFactory::toEntity)
         .flatMap(client::save)
         .then()
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "New Token has been created."))
-        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "New Token has not been created!\n" + throwable.getMessage()))
-        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("New Token has not been created!")));
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been saved into DB."))
+        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Token has not been saved into DB!\n" + throwable.getMessage()))
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Token has not been saved into DB!")));
   }
 
   @Override
   public Mono<Token> getTokenByDocumentIdentifier(String documentIdentifier) {
-    return client.findTokenIdsByDocumentIdentifier(documentIdentifier)
+    return Mono.just(documentIdentifier)
+        .flatMapMany(client::findTokenIdsByDocumentIdentifier)
         .single()
         .onErrorMap(
             NoSuchElementException.class,

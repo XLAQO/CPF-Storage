@@ -76,12 +76,8 @@ public class NodeFactory {
         .flatMap(node -> NodeFactory.getFormat(document).map(node::withFormat));
   }
 
-  public static Mono<OrganizationNode> toEntity(Organization organization) {
-    return Mono.zip(
-        MONO.makeSureNotNull(organization).map(NodeFactory::fromModel),
-        Mono.justOrEmpty(organization.getTrustedParty()).map(NodeFactory::fromModel))
-        .map(t -> t.getT1().withTrustedParty(t.getT2()));
-
+  public static OrganizationNode toEntity(Organization organization) {
+    return NodeFactory.fromModel(organization);
   }
 
   public static Mono<TrustedPartyNode> toEntity(TrustedParty trustedParty) {

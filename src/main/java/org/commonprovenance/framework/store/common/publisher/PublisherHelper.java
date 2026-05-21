@@ -156,6 +156,13 @@ public interface PublisherHelper {
           .orElse(Mono.error(new InternalApplicationException(message)));
     }
 
+    public <I, O> Function<I, Mono<O>> liftOptionalToMono(Function<I, Optional<O>> maybe) {
+      return (I value) -> maybe
+          .apply(value)
+          .map(Mono::justOrEmpty)
+          .orElse(Mono.empty());
+    }
+
     public <I, O> Function<I, Flux<O>> liftEffectToFlux(Function<I, Either<ApplicationException, List<O>>> kleisliArrow) {
       return (I value) -> kleisliArrow
           .apply(value)

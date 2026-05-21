@@ -3,14 +3,13 @@ package org.commonprovenance.framework.store.service.persistence.finalizedProvCo
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface OrganizationService {
 
-  Mono<Organization> storeOrganization(Organization organization);
+  Mono<Void> storeOrganization(Organization organization);
 
-  Mono<Organization> updateOrganization(Organization organization);
+  Mono<Void> updateOrganization(Organization organization);
 
   Mono<Boolean> exists(Organization organization);
 
@@ -20,12 +19,10 @@ public interface OrganizationService {
 
   Mono<Void> checkOrganizationExists(Organization organization);
 
-  Flux<Organization> getAllOrganizations();
-
   Mono<Organization> getOrganizationByIdentifier(String identifier);
 
   Mono<Organization> getOrganization(Organization organization);
 
-  Mono<Boolean> linkOwnedDocument(Document document);
+  Mono<Void> linkOwnedDocument(Document document);
 
 }

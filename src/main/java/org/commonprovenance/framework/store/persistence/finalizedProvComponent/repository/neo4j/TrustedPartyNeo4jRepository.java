@@ -11,7 +11,6 @@ import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.TrustedPartyRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j.client.TrustedPartyNeo4jRepositoryClient;
-import org.commonprovenance.framework.store.persistence.metaComponent.neo4j.MetaBundleNeo4jRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -23,7 +22,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
   private final String LOG_PREFIX = "TrustedPartyNeo4jRepository: ";
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaBundleNeo4jRepository.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(TrustedPartyNeo4jRepository.class);
 
   private final TrustedPartyNeo4jRepositoryClient trustedPartyClient;
 
@@ -38,9 +37,9 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .flatMap(NodeFactory::toEntity)
         .flatMap(trustedPartyClient::save)
         .then()
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "New Trusted Party has been created."))
-        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "New Trusted Party has not been created!\n" + throwable.getMessage()))
-        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("New Trusted Party has not been created!")));
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party has been saved into DB."))
+        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Trusted Party has not been saved into DB!\n" + throwable.getMessage()))
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Trusted Party has not been saved into DB!")));
   }
 
   @Override
