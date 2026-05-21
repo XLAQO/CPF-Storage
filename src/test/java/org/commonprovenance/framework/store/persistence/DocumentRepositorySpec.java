@@ -10,9 +10,9 @@ import static org.mockito.Mockito.when;
 
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.impl.DocumentPersistenceImpl;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.DocumentNode;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.DocumentRepository;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.DocumentNeo4jRepository;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.DocumentNeo4jRepositoryClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,9 +30,9 @@ import reactor.test.StepVerifier;
 class DocumentRepositorySpec {
 
   @Mock
-  private DocumentRepository documentRepository;
+  private DocumentNeo4jRepositoryClient client;
 
-  private DocumentPersistenceImpl documentPersistence;
+  private DocumentNeo4jRepository repository;
 
   private final String TEST_ID_1 = "e3cf8742-b595-47f4-8aae-a1e94b62a856";
   private final String TEST_ORG_ID_2 = "6ee9d79b-0615-4cb1-b0f3-2303d10c8cff";
@@ -42,7 +42,7 @@ class DocumentRepositorySpec {
 
   @BeforeEach
   void setUp() {
-    documentPersistence = new DocumentPersistenceImpl(documentRepository);
+    repository = new DocumentNeo4jRepository(client);
   }
 
   @Test
@@ -55,18 +55,17 @@ class DocumentRepositorySpec {
         Format.from(FORMAT_1).get(),
         SIGNATURE);
 
-    when(documentRepository.save(any())).thenAnswer(invocation -> {
+    when(client.save(any())).thenAnswer(invocation -> {
       DocumentNode argumentEntity = invocation.getArgument(0);
       return Mono.just(argumentEntity);
     });
 
-    StepVerifier.create(documentPersistence.create(doucment))
-        .expectNextCount(1)
+    StepVerifier.create(repository.save(doucment))
         .verifyComplete();
 
     ArgumentCaptor<DocumentNode> captor = ArgumentCaptor.forClass(DocumentNode.class);
     verify(
-        documentRepository,
+        client,
         times(1)
             .description("Repository save method should be invoked once"))
         .save(captor.capture());
@@ -79,36 +78,20 @@ class DocumentRepositorySpec {
   }
 
   @Test
-  @DisplayName("GetAll - should call findAll method")
-  void getAll_should_call_findAll_method_with_exact_paramters() {
-    when(documentRepository.findAll()).thenReturn(Flux.empty());
-
-    StepVerifier.create(documentPersistence.getAll())
-        .expectNextCount(0)
-        .verifyComplete();
-
-    verify(
-        documentRepository,
-        times(1)
-            .description("Repository findAll method should be invoked once"))
-        .findAll();
-  }
-
-  @Test
   @DisplayName("GetByIdentifier - should call findByIdentifier method with exact parameters")
   void getByIdentifier_should_call_findByIdentifier_method_with_exact_paramters() {
-    when(documentRepository.findByIdentifier(anyString())).thenReturn(Mono.empty());
+    when(client.getIdByIdentifier(anyString())).thenReturn(Flux.empty());
 
-    StepVerifier.create(documentPersistence.getByIdentifier(TEST_ID_1))
-        // .expectNextCount(0)
+    StepVerifier.create(repository.findByIdentifier(TEST_ID_1))
+        .expectNextCount(0)
         .verifyError();
 
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(
-        documentRepository,
+        client,
         times(1)
-            .description("Repository findByIdentifier method should be invoked once"))
-        .findByIdentifier(captor.capture());
+            .description("Neo4j client getIdByIdentifier method should be invoked once"))
+        .getIdByIdentifier(captor.capture());
 
     assertEquals(TEST_ID_1, captor.getValue(), "Repository findById method should be invoked with exact argument");
   }

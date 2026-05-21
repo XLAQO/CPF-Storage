@@ -4,9 +4,9 @@ import org.commonprovenance.framework.store.model.Token;
 
 import reactor.core.publisher.Mono;
 
-public interface TokenPersistence {
-  Mono<Void> create(Token token);
+public interface TokenRepository {
+  Mono<Void> save(Token token);
 
-  Mono<Token> getByDocumentIdentifier(String documentIdentifier);
+  Mono<Token> getTokenByDocumentIdentifier(String documentIdentifier);
 
 }

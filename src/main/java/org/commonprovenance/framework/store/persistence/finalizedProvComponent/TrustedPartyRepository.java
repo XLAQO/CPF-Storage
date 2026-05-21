@@ -1,5 +1,5 @@
 
-package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository;
+package org.commonprovenance.framework.store.persistence.finalizedProvComponent;
 
 import org.commonprovenance.framework.store.model.TrustedParty;
 

@@ -6,7 +6,7 @@ import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationPersistence;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +15,18 @@ import reactor.core.publisher.Mono;
 @Service
 public class OrganizationServiceImpl implements OrganizationService {
 
-  private final OrganizationPersistence persistence;
+  private final OrganizationRepository repository;
 
-  public OrganizationServiceImpl(OrganizationPersistence persistence) {
-    this.persistence = persistence;
+  public OrganizationServiceImpl(OrganizationRepository repository) {
+    this.repository = repository;
   }
 
   @Override
   public Mono<Void> storeOrganization(Organization organization) {
     return MONO.<Organization> makeSureNotNullWithMessage("Organization can not be null")
         .apply(organization)
-        .delayUntil(this.persistence::create)
-        .delayUntil(this.persistence::connectTrustedParty)
+        .delayUntil(this.repository::save)
+        .delayUntil(this.repository::connectTrusts)
         .then();
   }
 
@@ -34,7 +34,7 @@ public class OrganizationServiceImpl implements OrganizationService {
   public Mono<Void> updateOrganization(Organization organization) {
     return MONO.<Organization> makeSureNotNullWithMessage("Organization can not be null")
         .apply(organization)
-        .flatMap(this.persistence::update);
+        .flatMap(this.repository::save);
   }
 
   @Override
@@ -74,7 +74,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Mono<Organization> getOrganizationByIdentifier(String identifier) {
-    return this.persistence.getByIdentifier(identifier);
+    return this.repository.findByIdentifier(identifier);
   }
 
   @Override
@@ -87,7 +87,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Mono<Void> linkOwnedDocument(Document document) {
-    return this.persistence.connectDocument(document);
+    return this.repository.connectOwns(document);
   }
 
 }

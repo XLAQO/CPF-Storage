@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j;
+package org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j;
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
@@ -12,9 +12,9 @@ import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.OrganizationRepository;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j.client.OrganizationNeo4jRepositoryClient;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.OrganizationNeo4jRepositoryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -80,13 +80,11 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Organization with identifier '" + identifier + "' has not been found!")))
         .flatMap(ModelFactory::toDomain)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + identifier + "' has been found."))
-        .doOnError(NotFoundException.class, exception -> LOGGER.trace(exception.getMessage()))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
             LOGGER.trace(LOG_PREFIX + notFound.getMessage());
           else
             LOGGER.error(LOG_PREFIX + "Search Organization with identifier '" + identifier + "' has been failed!\n" + throwable.getMessage());
-
         })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Search Organization with identifier '" + identifier + "' has been failed!")));
 

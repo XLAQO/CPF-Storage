@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j;
+package org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j;
 
 import java.util.NoSuchElementException;
 
@@ -8,9 +8,9 @@ import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.TrustedPartyRepository;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository.neo4j.client.TrustedPartyNeo4jRepositoryClient;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.TrustedPartyNeo4jRepositoryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -56,7 +56,12 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .switchIfEmpty(Mono.error(() -> new NotFoundException("TrustedParty with name '" + name + "' has not found!")))
         .map(ModelFactory::toDomain)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party with name '" + name + "' has been found."))
-        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Search Trusted Party with name '" + name + "' failed!\n" + throwable.getMessage()))
+        .doOnError(throwable -> {
+          if (throwable instanceof NotFoundException notFound)
+            LOGGER.trace(LOG_PREFIX + notFound.getMessage());
+          else
+            LOGGER.error(LOG_PREFIX + "Search Trusted Party with name '" + name + "' failed!\n" + throwable.getMessage());
+        })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Search Trusted Party with name '" + name + "' has been failed!")));
   }
 
@@ -74,7 +79,12 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Default TrustedParty has not been found!")))
         .map(ModelFactory::toDomain)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Default TrustedParty has been found."))
-        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Search default Trusted Party has been failed!\n" + throwable.getMessage()))
+        .doOnError(throwable -> {
+          if (throwable instanceof NotFoundException notFound)
+            LOGGER.trace(LOG_PREFIX + notFound.getMessage());
+          else
+            LOGGER.error(LOG_PREFIX + "Search default Trusted Party has been failed!\n" + throwable.getMessage());
+        })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Search default Trusted Party has been failed!")));
   }
 
@@ -92,8 +102,12 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Trusted Party for organization with identifier '" + organizationIdentifier + "' has not been found!")))
         .map(ModelFactory::toDomain)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party for organization with identifier '" + organizationIdentifier + "' has been found."))
-        .doOnError(throwable -> LOGGER.error(
-            LOG_PREFIX + "Search Trusted Party for organization with identifier '" + organizationIdentifier + "' has been failed!\n" + throwable.getMessage()))
+        .doOnError(throwable -> {
+          if (throwable instanceof NotFoundException notFound)
+            LOGGER.trace(LOG_PREFIX + notFound.getMessage());
+          else
+            LOGGER.error(LOG_PREFIX + "Search Trusted Party for organization with identifier '" + organizationIdentifier + "' has been failed!\n" + throwable.getMessage());
+        })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
             new InternalApplicationException("Search Trusted Party for organization with identifier '" + organizationIdentifier + "' has been failed!")));
   }
@@ -111,8 +125,12 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .flatMap(trustedPartyClient::findUrlById)
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Trusted Party URL for organization with identifier '" + organizationIdentifier + "' has not been found!")))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party URL for organization with identifier '" + organizationIdentifier + "' has been found."))
-        .doOnError(throwable -> LOGGER.error(
-            LOG_PREFIX + "Search Trusted Party URL for organization with identifier '" + organizationIdentifier + "' has been failed!\n" + throwable.getMessage()))
+        .doOnError(throwable -> {
+          if (throwable instanceof NotFoundException notFound)
+            LOGGER.trace(LOG_PREFIX + notFound.getMessage());
+          else
+            LOGGER.error(LOG_PREFIX + "Search Trusted Party URL for organization with identifier '" + organizationIdentifier + "' has been failed!\n" + throwable.getMessage());
+        })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
             new InternalApplicationException("Search Trusted Party URL for organization with identifier '" + organizationIdentifier + "' has been failed!")));
   }

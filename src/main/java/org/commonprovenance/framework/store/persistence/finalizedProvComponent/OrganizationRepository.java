@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.persistence.finalizedProvComponent.repository;
+package org.commonprovenance.framework.store.persistence.finalizedProvComponent;
 
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;

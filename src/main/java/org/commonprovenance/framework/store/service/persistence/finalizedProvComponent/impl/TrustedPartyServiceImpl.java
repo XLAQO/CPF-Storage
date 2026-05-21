@@ -4,7 +4,7 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyPersistence;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
 import org.springframework.stereotype.Service;
 
@@ -12,16 +12,16 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class TrustedPartyServiceImpl implements TrustedPartyService {
-  private final TrustedPartyPersistence persistence;
+  private final TrustedPartyRepository repository;
 
-  public TrustedPartyServiceImpl(TrustedPartyPersistence persistence) {
-    this.persistence = persistence;
+  public TrustedPartyServiceImpl(TrustedPartyRepository repository) {
+    this.repository = repository;
   }
 
   @Override
   public Mono<Void> storeTrustedParty(TrustedParty trustedParty) {
     return MONO.<TrustedParty> makeSureNotNullWithMessage("TrustedParty can not be null").apply(trustedParty)
-        .flatMap(this.persistence::create);
+        .flatMap(this.repository::create);
   }
 
   @Override
@@ -33,27 +33,27 @@ public class TrustedPartyServiceImpl implements TrustedPartyService {
 
   @Override
   public Mono<TrustedParty> getDefaultTrustedParty() {
-    return this.persistence.getDefault();
+    return this.repository.findDefault();
   }
 
   @Override
   public Mono<TrustedParty> getTrustedPartyByName(String name) {
     return MONO.<String> makeSureNotNullWithMessage("TrustedParty name can not be null").apply(name)
-        .flatMap(this.persistence::getByName);
+        .flatMap(this.repository::findByName);
   }
 
   @Override
   public Mono<TrustedParty> getTrustedPartyByOrganizationIdentifier(String organizationIdentifier) {
     return MONO.<String> makeSureNotNullWithMessage("Organization identifier can not be null")
         .apply(organizationIdentifier)
-        .flatMap(this.persistence::getByOrganizationIdentifier);
+        .flatMap(this.repository::findByOrganizationIdentifier);
   }
 
   @Override
   public Mono<String> getTrustedPartyUrlByOrganizationIdentifier(String organizationIdentifier) {
     return MONO.<String> makeSureNotNullWithMessage("Organization identifier can not be null")
         .apply(organizationIdentifier)
-        .flatMap(this.persistence::getUrlByOrganizationIdentifier);
+        .flatMap(this.repository::findUrlByOrganizationIdentifier);
   }
 
   @Override

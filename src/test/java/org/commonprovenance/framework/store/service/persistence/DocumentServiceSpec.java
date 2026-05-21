@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentPersistence;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.impl.DocumentServiceImpl;
 import org.commonprovenance.framework.store.service.web.store.StoreWebService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,7 +27,7 @@ import reactor.test.StepVerifier;
 class DocumentServiceSpec {
 
   @Mock
-  private DocumentPersistence documentRepository;
+  private DocumentRepository documentRepository;
   @Mock
   private StoreWebService storeWebService;
 
@@ -39,10 +38,6 @@ class DocumentServiceSpec {
   private final String BASE64_STRING_GRAPH_1 = "AAAAQQAAAGIAAAByAAAAYQAAAGsAAABhAAAAIAAAAEQAAABhAAAAYgAAAHIAAABhAAAALgAAAC4=";
   private final Format FORMAT_1 = Format.JSON;
 
-  private final String UUID_2 = "dc3b1fc8-d01e-4405-8cf8-94320a11ba4c";
-  private final String TEST_ORG_ID_2 = "6ee9d79b-0615-4cb1-b0f3-2303d10c8cff";
-  private final String BASE64_STRING_GRAPH_2 = "AAAASAAAAGUAAABsAAAAbAAAAG8AAAAgAAAAVwAAAG8AAAByAAAAbAAAAGQAAAAh";
-  private final Format FORMAT_2 = Format.JSON;
   private final String SIGNATURE = "...";
 
   @BeforeEach
@@ -56,21 +51,19 @@ class DocumentServiceSpec {
   void storeDocument_should_call_create_on_repository() {
     Document document = new Document(UUID_1, TEST_ORG_ID_1, BASE64_STRING_GRAPH_1, FORMAT_1, SIGNATURE);
 
-    when(documentRepository.create(any(Document.class))).thenAnswer(invocation -> {
-      Document documnent = invocation.getArgument(0);
-      return Mono.just(documnent);
+    when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> {
+      return Mono.empty();
     });
 
     StepVerifier.create(documentService.storeDocument(document))
-        .expectNextCount(1)
         .verifyComplete();
 
     ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
     verify(
         documentRepository,
         times(1)
-            .description("Repository create method should be invoked once"))
-        .create(captor.capture());
+            .description("Repository save method should be invoked once"))
+        .save(captor.capture());
 
     Document capturedEntity = captor.getValue();
     assertTrue(capturedEntity.getIdentifier().get().equals(UUID_1)
@@ -80,30 +73,9 @@ class DocumentServiceSpec {
   }
 
   @Test
-  @DisplayName("getAllDocuments - should call getAll on repository once")
-  void getAllDocuments_shouldReturnAllDocuments() {
-    Document doc1 = new Document(UUID_1, TEST_ORG_ID_1, BASE64_STRING_GRAPH_1, FORMAT_1, SIGNATURE);
-    Document doc2 = new Document(UUID_2, TEST_ORG_ID_2, BASE64_STRING_GRAPH_2, FORMAT_2, SIGNATURE);
-
-    when(documentRepository.getAll()).thenReturn(Flux.just(doc1, doc2));
-
-    Flux<Document> result = documentService.getAllDocuments();
-
-    StepVerifier.create(result)
-        .expectNextCount(2)
-        .verifyComplete();
-
-    verify(
-        documentRepository,
-        times(1)
-            .description("Repository getAll method should be invoked once"))
-        .getAll();
-  }
-
-  @Test
   void getDocumentByIdentifier_shouldReturnDocument() {
     Document document = new Document(UUID_1, TEST_ORG_ID_1, BASE64_STRING_GRAPH_1, FORMAT_1, SIGNATURE);
-    when(documentRepository.getByIdentifier(UUID_1)).thenReturn(Mono.just(document));
+    when(documentRepository.findByIdentifier(UUID_1)).thenReturn(Mono.just(document));
 
     StepVerifier.create(documentService.getDocumentByIdentifier(UUID_1))
         .expectNext(document)
@@ -114,7 +86,7 @@ class DocumentServiceSpec {
         documentRepository,
         times(1)
             .description("Repository getByIdentifier method should be invoked once"))
-        .getByIdentifier(captor.capture());
+        .findByIdentifier(captor.capture());
 
     String capturedId = captor.getValue();
     assertTrue(capturedId.equals(UUID_1),
