@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.web.trustedParty.dto.form.factory;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
 import java.time.Instant;
 import java.util.List;
@@ -12,16 +12,17 @@ import org.commonprovenance.framework.store.common.dto.HasCreatedOn;
 import org.commonprovenance.framework.store.common.dto.HasDocument;
 import org.commonprovenance.framework.store.common.dto.HasOrganizationId;
 import org.commonprovenance.framework.store.common.dto.HasSignature;
+import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.GraphType;
 import org.commonprovenance.framework.store.model.Organization;
+import org.commonprovenance.framework.store.web.trustedParty.dto.form.IssueTokenTPFormDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.form.RegisterOrganizationTPFormDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.form.UpdateOrganizationTPFormDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.form.VerifySignatureTPFormDTO;
-import org.commonprovenance.framework.store.web.trustedParty.dto.form.IssueTokenTPFormDTO;
 
-import reactor.core.publisher.Mono;
+import io.vavr.control.Either;
 
 public class DTOFactory {
 
@@ -76,9 +77,8 @@ public class DTOFactory {
 
   // ---
 
-  public static Mono<IssueTokenTPFormDTO> toForm(Document document, GraphType graphType) {
-
-    return Mono.justOrEmpty(MonoidComposition.compose(
+  public static Either<ApplicationException, IssueTokenTPFormDTO> toForm(Document document, GraphType graphType) {
+    return Either.<ApplicationException, IssueTokenTPFormDTO> right(MonoidComposition.compose(
         new IssueTokenTPFormDTO(),
         List.of(
             HasOrganizationId.addIdentifier(document),
@@ -87,31 +87,31 @@ public class DTOFactory {
             addSignatureFromDocumentModelIfGraphType(document, graphType),
             addTypeFromGraphType(graphType),
             addCreatedOn())))
-        .flatMap(MONO::validateDTO);
+        .flatMap(EITHER::validateDTO);
   }
 
-  public static Mono<RegisterOrganizationTPFormDTO> toForm(Organization organization) {
-    return Mono.justOrEmpty(new RegisterOrganizationTPFormDTO(
+  public static Either<ApplicationException, RegisterOrganizationTPFormDTO> toForm(Organization organization) {
+    return Either.<ApplicationException, RegisterOrganizationTPFormDTO> right(new RegisterOrganizationTPFormDTO(
         organization.getIdentifier(),
         organization.getClientCertificate(),
         organization.getIntermediateCertificates()))
-        .flatMap(MONO::validateDTO);
+        .flatMap(EITHER::validateDTO);
   }
 
-  public static Mono<UpdateOrganizationTPFormDTO> toUpdateForm(Organization organization) {
-    return Mono.justOrEmpty(new UpdateOrganizationTPFormDTO(
+  public static Either<ApplicationException, UpdateOrganizationTPFormDTO> toUpdateForm(Organization organization) {
+    return Either.<ApplicationException, UpdateOrganizationTPFormDTO> right(new UpdateOrganizationTPFormDTO(
         organization.getClientCertificate(),
         organization.getIntermediateCertificates()))
-        .flatMap(MONO::validateDTO);
+        .flatMap(EITHER::validateDTO);
   }
 
-  public static Mono<VerifySignatureTPFormDTO> toForm(Organization organization, Document document) {
-    return Mono.justOrEmpty(MonoidComposition.compose(
+  public static Either<ApplicationException, VerifySignatureTPFormDTO> toForm(Organization organization, Document document) {
+    return Either.<ApplicationException, VerifySignatureTPFormDTO> right(MonoidComposition.compose(
         new VerifySignatureTPFormDTO(),
         List.of(
             HasOrganizationId.addIdentifier(organization),
             HasDocument.addGraph(document),
             HasSignature.addSignature(document))))
-        .flatMap(MONO::validateDTO);
+        .flatMap(EITHER::validateDTO);
   }
 }
