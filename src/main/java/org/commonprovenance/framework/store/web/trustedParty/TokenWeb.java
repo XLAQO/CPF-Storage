@@ -10,13 +10,13 @@ import org.openprovenance.prov.model.QualifiedName;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface TokenClient {
+public interface TokenWeb {
 
-  Function<String, Flux<Token>> getAllByOrganization(Optional<String> trustedPartyUrl);
+  Function<String, Flux<Token>> getAllByOrganization(Optional<String> optTrustedPartyUrl);
 
   Mono<Token> getByDocumentId(
       String organizationId,
-      QualifiedName bundle_identifier,
+      QualifiedName bundleIdentifier,
       Format documentFormat,
-      Optional<String> trustedPartyUrl);
+      Optional<String> optTrustedPartyUrl);
 }
