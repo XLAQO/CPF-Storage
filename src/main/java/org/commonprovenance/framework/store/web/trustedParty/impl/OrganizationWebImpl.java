@@ -34,10 +34,10 @@ public class OrganizationWebImpl implements OrganizationWeb {
   }
 
   @Override
-  public Function<Organization, Mono<Void>> create(Optional<String> optTrustedPartyUrl) {
+  public Function<Organization, Mono<Void>> create(Optional<String> optTrustedPartyBaseUrl) {
     return (Organization organization) -> Mono.just(organization)
         .flatMap(MONO.liftEffectToMono(DTOFactory::toForm))
-        .flatMap(optTrustedPartyUrl
+        .flatMap(optTrustedPartyBaseUrl
             .map(this.client.sendCustomPostRequest("/organizations/" + organization.getIdentifier(), Void.class))
             .orElse(this.client.sendPostRequest("/organizations/" + organization.getIdentifier(), Void.class)))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "New organization with identifier '" + organization.getIdentifier() + "' has been registered."))
@@ -48,8 +48,8 @@ public class OrganizationWebImpl implements OrganizationWeb {
   }
 
   @Override
-  public Flux<Organization> getAll(Optional<String> optTrustedPartyUrl) {
-    return optTrustedPartyUrl
+  public Flux<Organization> getAll(Optional<String> optTrustedPartyBaseUrl) {
+    return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetManyRequest("/organizations", OrganizationTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetManyRequest("/organizations", OrganizationTPResponseDTO.class, Map.of()))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
@@ -59,10 +59,10 @@ public class OrganizationWebImpl implements OrganizationWeb {
   }
 
   @Override
-  public Function<String, Mono<Organization>> getById(Optional<String> optTrustedPartyUrl) {
+  public Function<String, Mono<Organization>> getById(Optional<String> optTrustedPartyBaseUrl) {
     return (String organizationIdentifier) -> MONO.<String> makeSureNotNullWithMessage("Organization id can not be null!")
         .apply(organizationIdentifier)
-        .flatMap((String id) -> optTrustedPartyUrl
+        .flatMap((String id) -> optTrustedPartyBaseUrl
             .map(this.client.sendCustomGetOneRequest("/organizations/" + id, OrganizationTPResponseDTO.class, Map.of()))
             .orElse(this.client.sendGetOneRequest("/organizations/" + id, OrganizationTPResponseDTO.class, Map.of())))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))

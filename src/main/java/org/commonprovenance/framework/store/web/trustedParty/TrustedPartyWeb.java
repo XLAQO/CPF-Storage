@@ -12,9 +12,9 @@ import org.commonprovenance.framework.store.model.TrustedParty;
 import reactor.core.publisher.Mono;
 
 public interface TrustedPartyWeb {
-  Mono<TrustedParty> getInfo(Optional<String> optTrustedPartyUrl);
+  Mono<TrustedParty> getInfo(Optional<String> optTrustedPartyBaseUrl);
 
-  Function<Document, Mono<Token>> issueGraphToken(Optional<String> optTrustedPartyUrl, GraphType graphType);
+  Function<Document, Mono<Token>> issueGraphToken(Optional<String> optTrustedPartyBaseUrl, GraphType graphType);
 
   Function<Document, Mono<Boolean>> verifySignature(Organization organization);
 }

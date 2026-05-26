@@ -10,9 +10,9 @@ import reactor.core.publisher.Mono;
 
 public interface OrganizationWeb {
 
-  Function<Organization, Mono<Void>> create(Optional<String> optTrustedPartyUrl);
+  Function<Organization, Mono<Void>> create(Optional<String> optTrustedPartyBaseUrl);
 
-  Flux<Organization> getAll(Optional<String> optTrustedPartyUrl);
+  Flux<Organization> getAll(Optional<String> optTrustedPartyBaseUrl);
 
-  Function<String, Mono<Organization>> getById(Optional<String> optTrustedPartyUrl);
+  Function<String, Mono<Organization>> getById(Optional<String> optTrustedPartyBaseUrl);
 }

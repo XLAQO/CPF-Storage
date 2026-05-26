@@ -40,10 +40,10 @@ public class TokenWebImpl implements TokenWeb {
   }
 
   @Override
-  public Function<String, Flux<Token>> getAllByOrganization(Optional<String> optTrustedPartyUrl) {
+  public Function<String, Flux<Token>> getAllByOrganization(Optional<String> optTrustedPartyBaseUrl) {
     Map<String, String> queryParams = Map.of("tokenFormat", "jwt");
 
-    return (String organizationIdentifier) -> optTrustedPartyUrl
+    return (String organizationIdentifier) -> optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetManyRequest(getTokensUri(organizationIdentifier), TokenTPResponseDTO.class, queryParams))
         .orElse(this.client.sendGetManyRequest(getTokensUri(organizationIdentifier), TokenTPResponseDTO.class, queryParams))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
@@ -58,11 +58,11 @@ public class TokenWebImpl implements TokenWeb {
       String organizationIdentifier,
       QualifiedName bundleIdentifier,
       Format documentFormat,
-      Optional<String> optTrustedPartyUrl) {
+      Optional<String> optTrustedPartyBaseUrl) {
     String uri = getTokensUri(organizationIdentifier) + "/" + bundleIdentifier.getUri() + "/" + documentFormat.toString();
     Map<String, String> queryParams = Map.of("tokenFormat", "jwt");
 
-    return optTrustedPartyUrl
+    return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest(uri, TokenTPResponseDTO.class, queryParams))
         .orElse(client.sendGetOneRequest(uri, TokenTPResponseDTO.class, queryParams))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))

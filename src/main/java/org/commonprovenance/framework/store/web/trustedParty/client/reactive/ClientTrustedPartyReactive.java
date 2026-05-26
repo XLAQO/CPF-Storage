@@ -35,7 +35,7 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
       String uri,
       Class<T> responseType,
       Map<String, String> queryParams) {
-    return (String trustedPartyUrl) -> this.buildWebClient(trustedPartyUrl)
+    return (String trustedPartyBaseUrl) -> this.buildWebClient(trustedPartyBaseUrl)
         .get()
         .uri(buildUriWithParams(uri, queryParams))
         .retrieve()
@@ -67,7 +67,7 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
       String uri,
       Class<T> responseType,
       Map<String, String> queryParams) {
-    return (String trustedPartyUrl) -> this.buildWebClient(trustedPartyUrl)
+    return (String trustedPartyBaseUrl) -> this.buildWebClient(trustedPartyBaseUrl)
         .get()
         .uri(buildUriWithParams(uri, queryParams))
         .retrieve()
@@ -85,7 +85,7 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
 
   @Override
   public <T, B> Function<String, Function<B, Mono<T>>> sendCustomPostRequest(String uri, Class<T> responseType) {
-    return (String trustedPartyUrl) -> (B body) -> this.buildWebClient(trustedPartyUrl)
+    return (String trustedPartyBaseUrl) -> (B body) -> this.buildWebClient(trustedPartyBaseUrl)
         .post()
         .uri(uri)
         .bodyValue(body)
@@ -104,7 +104,7 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
 
   @Override
   public <T, B> Function<String, Function<B, Mono<T>>> sendCustomPutRequest(String uri, Class<T> responseType) {
-    return (String trustedPartyUrl) -> (B body) -> this.buildWebClient(trustedPartyUrl)
+    return (String trustedPartyBaseUrl) -> (B body) -> this.buildWebClient(trustedPartyBaseUrl)
         .put()
         .uri(uri)
         .bodyValue(body)
@@ -122,7 +122,7 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
 
   @Override
   public <T> Function<String, Mono<T>> sendCustomDeleteRequest(String uri, Class<T> responseType) {
-    return (String trustedPartyUrl) -> this.buildWebClient(trustedPartyUrl)
+    return (String trustedPartyBaseUrl) -> this.buildWebClient(trustedPartyBaseUrl)
         .delete()
         .uri(uri)
         .retrieve()
@@ -139,9 +139,9 @@ public class ClientTrustedPartyReactive implements ClientTrustedParty {
     };
   }
 
-  private WebClient buildWebClient(String trustedPartyUrl) {
+  private WebClient buildWebClient(String trustedPartyBaseUrl) {
     return WebClient.builder()
-        .baseUrl(trustedPartyUrl)
+        .baseUrl(trustedPartyBaseUrl)
         .defaultHeader("Accept", "application/json")
         .build();
   }

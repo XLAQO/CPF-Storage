@@ -38,9 +38,9 @@ public class DocumentWebImpl implements DocumentWeb {
       String organizationIdentifer,
       QualifiedName bundleIdentifier,
       Format documentFormat,
-      Optional<String> optTrustedPartyUrl) {
+      Optional<String> optTrustedPartyBaseUrl) {
     String uri = "organizations/" + organizationIdentifer + "/documents/" + bundleIdentifier.getUri() + "/" + documentFormat.toString();
-    return optTrustedPartyUrl
+    return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest(uri, DocumentTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest(uri, DocumentTPResponseDTO.class, Map.of()))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))

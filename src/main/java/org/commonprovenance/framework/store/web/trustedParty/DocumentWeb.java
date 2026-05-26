@@ -14,5 +14,5 @@ public interface DocumentWeb {
       String organizationIdentifier,
       QualifiedName bundleIdentifier,
       Format documentFormat,
-      Optional<String> optTrustedPartyUrl);
+      Optional<String> optTrustedPartyBaseUrl);
 }

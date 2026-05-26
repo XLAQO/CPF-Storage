@@ -40,36 +40,37 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
   }
 
   @Override
-  public Mono<TrustedParty> getInfo(Optional<String> optTrustedPartyUrl) {
-    return optTrustedPartyUrl
+  public Mono<TrustedParty> getInfo(Optional<String> optTrustedPartyBaseUrl) {
+    return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
         .flatMap(MONO.liftEffectToMono(ModelFactory.toDomain(
-            this.getTrustedPartyUrl(optTrustedPartyUrl),
-            optTrustedPartyUrl.isEmpty())))
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party info object has been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyUrl) + "'."))
+            this.getTrustedPartyUrl(optTrustedPartyBaseUrl),
+            optTrustedPartyBaseUrl.isEmpty())))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party info object has been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
             LOGGER.trace(LOG_PREFIX + notFound.getMessage());
           else
-            LOGGER.error(LOG_PREFIX + "Trusted Party info object has not been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyUrl) + "'!\n" + throwable.getMessage());
+            LOGGER.error(
+                LOG_PREFIX + "Trusted Party info object has not been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!\n" + throwable.getMessage());
         })
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
-            new InternalApplicationException("Trusted Party info object has not been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyUrl) + "'!")));
+            new InternalApplicationException("Trusted Party info object has not been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!")));
   }
 
   @Override
-  public Function<Document, Mono<Token>> issueGraphToken(Optional<String> optTrustedPartyUrl, GraphType graphType) {
+  public Function<Document, Mono<Token>> issueGraphToken(Optional<String> optTrustedPartyBaseUrl, GraphType graphType) {
     return (Document document) -> MONO.fromEither(DTOFactory.toForm(document, graphType))
-        .flatMap(optTrustedPartyUrl
+        .flatMap(optTrustedPartyBaseUrl
             .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
             .orElse(this.client.sendPostRequest("/issueToken", TokenTPResponseDTO.class)))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyUrl) + "'."))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'."))
         .doOnError(throwable -> LOGGER.error(
-            LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyUrl) + "'!\n" + throwable.getMessage()))
+            LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!\n" + throwable.getMessage()))
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
-            new InternalApplicationException("Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyUrl) + "'!")));
+            new InternalApplicationException("Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!")));
   }
 
   @Override
@@ -93,8 +94,8 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
             new InternalApplicationException("Signature has not been verified by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!")));
   }
 
-  private String getTrustedPartyUrl(Optional<String> optTrustedPartyUrl) {
-    return optTrustedPartyUrl.orElse(this.client.getDefaultTrustedPartyUrl());
+  private String getTrustedPartyUrl(Optional<String> optTrustedPartyBaseUrl) {
+    return optTrustedPartyBaseUrl.orElse(this.client.getDefaultTrustedPartyUrl());
   }
 
   private String getTrustedPartyUrl(Organization organization) {

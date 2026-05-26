@@ -12,11 +12,11 @@ import reactor.core.publisher.Mono;
 
 public interface TokenWeb {
 
-  Function<String, Flux<Token>> getAllByOrganization(Optional<String> optTrustedPartyUrl);
+  Function<String, Flux<Token>> getAllByOrganization(Optional<String> optTrustedPartyBaseUrl);
 
   Mono<Token> getByDocumentId(
       String organizationId,
       QualifiedName bundleIdentifier,
       Format documentFormat,
-      Optional<String> optTrustedPartyUrl);
+      Optional<String> optTrustedPartyBaseUrl);
 }
