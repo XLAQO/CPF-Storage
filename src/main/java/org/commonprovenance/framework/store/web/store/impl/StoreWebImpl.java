@@ -23,17 +23,17 @@ public class StoreWebImpl implements StoreWeb {
   }
 
   @Override
-  public Mono<Void> pingByUrl(String url) {
-    return Mono.just(url)
+  public Mono<Void> pingByResourcePath(String resourcePath) {
+    return Mono.just(resourcePath)
         .flatMap(this.client::sendHeadRequest)
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Ping to Resource at url '" + url + "' has been passed."))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Ping Resource at path '" + resourcePath + "' has been passed."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
             LOGGER.trace(LOG_PREFIX + notFound.getMessage());
           else
-            LOGGER.error(LOG_PREFIX + "Ping to Resource at url '" + url + "' has been failed!\n" + throwable.getMessage());
+            LOGGER.error(LOG_PREFIX + "Ping Resource at path '" + resourcePath + "' has been failed!\n" + throwable.getMessage());
         })
-        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Ping to Resource at url '" + url + "' has been failed!")));
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Ping Resource at path '" + resourcePath + "' has been failed!")));
 
   }
 

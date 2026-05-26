@@ -4,5 +4,5 @@ import reactor.core.publisher.Mono;
 
 public interface StoreWeb {
 
-  Mono<Void> pingByUrl(String url);
+  Mono<Void> pingByResourcePath(String resourcePath);
 }

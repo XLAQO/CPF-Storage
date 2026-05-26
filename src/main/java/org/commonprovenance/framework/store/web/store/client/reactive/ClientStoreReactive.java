@@ -20,9 +20,9 @@ public class ClientStoreReactive implements ClientStore {
   }
 
   @Override
-  public Mono<Void> sendHeadRequest(String uri) {
+  public Mono<Void> sendHeadRequest(String resourcePath) {
     return this.client.head()
-        .uri(uri)
+        .uri(resourcePath)
         .retrieve()
         .onStatus(
             status -> status.value() == 404,
