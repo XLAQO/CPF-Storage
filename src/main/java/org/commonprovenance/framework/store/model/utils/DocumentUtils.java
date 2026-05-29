@@ -11,7 +11,6 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
-import org.commonprovenance.framework.store.model.Organization;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.HasOther;
 import org.openprovenance.prov.model.QualifiedName;
@@ -27,10 +26,6 @@ import io.vavr.Function1;
 import io.vavr.control.Either;
 
 public final class DocumentUtils {
-  public static Organization buildOrganization(Document document) {
-    return (new Organization())
-        .withIdentifier(document.getOrganizationIdentifier());
-  }
 
   public static Function1<HasOther, Either<ApplicationException, QualifiedName>> getCpmAttributeValue(CpmAttribute attribute) {
     return (HasOther hasOther) -> Either.<ApplicationException, HasOther> right(hasOther).flatMap(EITHER.<HasOther> makeSureNotNullWithMessage("Statement can not be null!"))
@@ -201,14 +196,6 @@ public final class DocumentUtils {
         .mapLeft(ApplicationExceptionFactory.build(
             InvalidValueException::new,
             "CpmDocument is not present!"));
-  }
-
-  public static Either<ApplicationException, Document> setDocumentIdentifier(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .flatMap(DocumentUtils::getCpmDocument)
-        .map(CpmDocument::getBundleId)
-        .map(QualifiedName::getLocalPart)
-        .map(document::withIdentifier);
   }
 
   public static Either<ApplicationException, String> getDocumentIdentifier(Document document) {

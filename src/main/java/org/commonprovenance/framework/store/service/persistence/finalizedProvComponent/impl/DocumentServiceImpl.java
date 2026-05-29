@@ -5,6 +5,7 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
+import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
@@ -56,8 +57,9 @@ public class DocumentServiceImpl implements DocumentService {
   @Override
   public Mono<Boolean> exists(Document document) {
     return MONO.makeSureNotNull(document)
-        .map(Document::getIdentifier)
-        .flatMap(MONO::fromOptional)
+        .flatMap(MONO.liftOptionalToMono(
+            Document::getIdentifier,
+            _ -> new InvalidValueException("Document has not been deserialized yet!")))
         .flatMap(this::existsByIdentifier)
         .onErrorResume(NotFoundException.class, _ -> Mono.just(false));
   }

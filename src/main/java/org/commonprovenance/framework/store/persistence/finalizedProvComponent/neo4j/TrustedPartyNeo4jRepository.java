@@ -1,5 +1,7 @@
 package org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j;
 
+import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+
 import java.util.NoSuchElementException;
 
 import org.commonprovenance.framework.store.exceptions.ConflictException;
@@ -8,8 +10,9 @@ import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.TrustedPartyFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.TrustedPartyNodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.TrustedPartyNeo4jRepositoryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +37,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
   @Override
   public Mono<Void> create(TrustedParty trustedParty) {
     return Mono.just(trustedParty)
-        .flatMap(NodeFactory::toEntity)
+        .flatMap(MONO.liftEffectToMono(TrustedPartyNodeFactory::fromModel))
         .flatMap(trustedPartyClient::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party has been saved into DB."))
@@ -90,7 +93,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
 
   @Override
   public Mono<TrustedParty> findByOrganizationIdentifier(String organizationIdentifier) {
-    return trustedPartyClient.findIdByOrganizationIdentifier(organizationIdentifier)
+    return trustedPartyClient.findByOrganizationIdentifier(organizationIdentifier)
         .single()
         .onErrorMap(
             NoSuchElementException.class,
@@ -98,9 +101,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .onErrorMap(
             IndexOutOfBoundsException.class,
             _ -> new ConflictException("Organization with identifier '" + organizationIdentifier + "' has more then one TrustedParty!"))
-        .flatMap(trustedPartyClient::findById)
-        .switchIfEmpty(Mono.error(() -> new NotFoundException("Trusted Party for organization with identifier '" + organizationIdentifier + "' has not been found!")))
-        .map(ModelFactory::toDomain)
+        .map(TrustedPartyFactory::fromPersistance)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party for organization with identifier '" + organizationIdentifier + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)

@@ -17,7 +17,7 @@ public class DTOFactory {
 
   private static DocumentResponseDTO fromModel(Token model) {
     return new DocumentResponseDTO(
-        model.getDocument().getGraph(),
+        model.getGraph().getGraph(),
         DTOFactory.fromModelToken(model));
   }
 
@@ -38,8 +38,7 @@ public class DTOFactory {
         .map(DTOFactory::fromModelToken);
   }
 
-  public static Mono<OrganizationResponseDTO> toDTO(Organization organization) {
-    return MONO.makeSureNotNull(organization)
-        .map(DTOFactory::fromModel);
+  public static OrganizationResponseDTO toDTO(Organization organization) {
+    return DTOFactory.fromModel(organization);
   }
 }

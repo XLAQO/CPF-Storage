@@ -11,5 +11,5 @@ public interface CertificateWeb {
 
   Function<String, Mono<Organization>> getOrganizationCertificate(Optional<String> optTrustedPartyBaseUrl);
 
-  Function<Organization, Mono<Void>> updateOrganizationCertificate(Optional<String> optTrustedPartyBaseUrl);
+  Mono<Void> updateOrganizationCertificate(Organization organization);
 }

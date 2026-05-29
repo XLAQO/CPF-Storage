@@ -11,7 +11,7 @@ import org.commonprovenance.framework.store.exceptions.factory.ApplicationExcept
 import org.commonprovenance.framework.store.model.Token;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TokenRepository;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.TokenNodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.TokenNeo4jRepositoryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ public class TokenNeo4jRepository implements TokenRepository {
   @Override
   public Mono<Void> save(Token token) {
     return Mono.just(token)
-        .flatMap(NodeFactory::toEntity)
+        .flatMap(MONO.liftEffectToMono(TokenNodeFactory::fromModel))
         .flatMap(client::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been saved into DB."))

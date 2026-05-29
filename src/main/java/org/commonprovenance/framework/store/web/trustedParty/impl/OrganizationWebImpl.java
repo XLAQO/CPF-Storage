@@ -34,12 +34,14 @@ public class OrganizationWebImpl implements OrganizationWeb {
   }
 
   @Override
-  public Function<Organization, Mono<Void>> create(Optional<String> optTrustedPartyBaseUrl) {
-    return (Organization organization) -> Mono.just(organization)
-        .flatMap(MONO.liftEffectToMono(DTOFactory::toForm))
-        .flatMap(optTrustedPartyBaseUrl
-            .map(this.client.sendCustomPostRequest("/organizations/" + organization.getIdentifier(), Void.class))
-            .orElse(this.client.sendPostRequest("/organizations/" + organization.getIdentifier(), Void.class)))
+  public Mono<Void> create(Organization organization) {
+    return MONO.combineM(
+        MONO.fromEitherOptional(organization.getTrustedPartyBaseUrl()),
+        Mono.just(organization).flatMap(MONO.liftEffectToMono(DTOFactory::toForm)),
+        (optTrustedPartyBaseUrl, form) -> Mono.just(form)
+            .flatMap(optTrustedPartyBaseUrl
+                .map(this.client.sendCustomPostRequest("/organizations/" + organization.getIdentifier(), Void.class))
+                .orElse(this.client.sendPostRequest("/organizations/" + organization.getIdentifier(), Void.class))))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "New organization with identifier '" + organization.getIdentifier() + "' has been registered."))
         .doOnError(throwable -> LOGGER.error(
             LOG_PREFIX + "New organization with identifier '" + organization.getIdentifier() + "' has not been registered!\n" + throwable.getMessage()))
@@ -59,17 +61,18 @@ public class OrganizationWebImpl implements OrganizationWeb {
   }
 
   @Override
-  public Function<String, Mono<Organization>> getById(Optional<String> optTrustedPartyBaseUrl) {
-    return (String organizationIdentifier) -> MONO.<String> makeSureNotNullWithMessage("Organization id can not be null!")
-        .apply(organizationIdentifier)
-        .flatMap((String id) -> optTrustedPartyBaseUrl
-            .map(this.client.sendCustomGetOneRequest("/organizations/" + id, OrganizationTPResponseDTO.class, Map.of()))
-            .orElse(this.client.sendGetOneRequest("/organizations/" + id, OrganizationTPResponseDTO.class, Map.of())))
+  public Mono<Organization> getById(Organization organization) {
+    return MONO.combineM(
+        MONO.fromEitherOptional(organization.getTrustedPartyBaseUrl()),
+        Mono.just(organization).map(Organization::getIdentifier),
+        (optTrustedPartyBaseUrl, organizationIdentifier) -> optTrustedPartyBaseUrl
+            .map(this.client.sendCustomGetOneRequest("/organizations/" + organizationIdentifier, OrganizationTPResponseDTO.class, Map.of()))
+            .orElse(this.client.sendGetOneRequest("/organizations/" + organizationIdentifier, OrganizationTPResponseDTO.class, Map.of())))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + organizationIdentifier + "' has been fetched."))
-        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Organization with identifier '" + organizationIdentifier + "' has not been fetched!\n" + throwable.getMessage()))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has been fetched."))
+        .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has not been fetched!\n" + throwable.getMessage()))
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
-            new InternalApplicationException("Organization with identifier '" + organizationIdentifier + "' has not been fetched!")));
+            new InternalApplicationException("Organization with identifier '" + organization.getIdentifier() + "' has not been fetched!")));
   }
 
 }

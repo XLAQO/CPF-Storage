@@ -143,6 +143,12 @@ public interface EitherUtils {
           .orElse(Either.<ApplicationException, R> left(new InternalApplicationException("Optional value is not present!")));
     }
 
+    public <I, R> Function1<I, Either<ApplicationException, R>> liftEitherOptional(Function1<I, Optional<R>> maybe, Function1<I, ApplicationException> exceptionBuilder) {
+      return (I input) -> maybe.apply(input)
+          .map(Either::<ApplicationException, R> right)
+          .orElse(Either.<ApplicationException, R> left(exceptionBuilder.apply(input)));
+    }
+
     public <R> Either<ApplicationException, R> liftEither(Function0<R> liftSupplier) {
       return Function0.<R> liftTry(liftSupplier)
           .andThen((Try<R> resOrThrowable) -> resOrThrowable.toEither()

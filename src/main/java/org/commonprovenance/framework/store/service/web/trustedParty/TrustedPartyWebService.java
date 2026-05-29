@@ -6,24 +6,23 @@ import java.util.function.Function;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
-import org.commonprovenance.framework.store.model.TrustedParty;
 
 import reactor.core.publisher.Mono;
 
 public interface TrustedPartyWebService {
-  Function<Organization, Mono<Organization>> createOrganization(Optional<String> trustedPartyUri);
+  Mono<Void> registerOrganization(Organization organization);
 
-  Mono<Organization> updateOrganization(Organization organization);
+  Mono<Void> updateOrganization(Organization organization);
 
-  Mono<Boolean> exists(Organization organization);
+  Mono<Boolean> organizationIsRegistered(Organization organization);
 
-  Mono<Boolean> notExists(Organization organization);
+  Mono<Boolean> organizationIsNotRegistered(Organization organization);
 
-  Mono<TrustedParty> getTrustedPartyByUrl(Optional<String> trustedPartyUrl);
+  Function<Organization, Mono<Organization>> setTrustedPartyByBaseUrl(Optional<String> optTrustedPartyBaseUrl);
 
-  Function<Organization, Mono<Void>> verifySignature(Document document);
+  Mono<Void> verifySignature(Organization organization);
 
-  Function<Document, Mono<Token>> issueGraphToken(Optional<String> trustedPartyUrl);
+  Mono<Organization> issueGraphToken(Organization organization);
 
   Mono<Token> issueGraphToken(Document document);
 

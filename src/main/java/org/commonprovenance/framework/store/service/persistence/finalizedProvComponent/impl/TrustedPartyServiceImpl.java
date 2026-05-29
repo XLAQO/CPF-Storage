@@ -2,12 +2,14 @@ package org.commonprovenance.framework.store.service.persistence.finalizedProvCo
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
+import org.commonprovenance.framework.store.exceptions.ConstraintException;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
 import org.springframework.stereotype.Service;
 
+import jakarta.ws.rs.NotFoundException;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -62,6 +64,26 @@ public class TrustedPartyServiceImpl implements TrustedPartyService {
         .apply(organization)
         .map(Organization::getIdentifier)
         .flatMap(this::getTrustedPartyUrlByOrganizationIdentifier);
+  }
+
+  @Override
+  public Mono<Boolean> isRegistered(TrustedParty trustedParty) {
+    return Mono.just(trustedParty)
+        .map(TrustedParty::getName)
+        .flatMap(this.repository::findByName)
+        .hasElement()
+        .onErrorReturn(NotFoundException.class, false);
+  }
+
+  @Override
+  public Mono<Boolean> isTrustedPartyValid(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(MONO.liftOptionalToMono(Organization::getTrustedParty))
+        .map(TrustedParty::getName)
+        .flatMap(this.repository::findByName)
+        .delayUntil(MONO.liftEffectToMono(TrustedParty::validate))
+        .hasElement()
+        .onErrorReturn(NotFoundException.class, false);
   }
 
 }

@@ -9,6 +9,7 @@ import java.util.function.Function;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
+import org.commonprovenance.framework.store.filter.AccessLogFilter;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.web.trustedParty.CertificateWeb;
@@ -23,14 +24,16 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class CertificateWebImpl implements CertificateWeb {
+  private final AccessLogFilter accessLogFilter;
   private final String LOG_PREFIX = "CertificateWebImpl: ";
   private static final Logger LOGGER = LoggerFactory.getLogger(CertificateWebImpl.class);
 
   private final ClientTrustedParty client;
 
   public CertificateWebImpl(
-      ClientTrustedParty client) {
+      ClientTrustedParty client, AccessLogFilter accessLogFilter) {
     this.client = client;
+    this.accessLogFilter = accessLogFilter;
   }
 
   private String getUri(String id) {
@@ -59,12 +62,14 @@ public class CertificateWebImpl implements CertificateWeb {
   }
 
   @Override
-  public Function<Organization, Mono<Void>> updateOrganizationCertificate(Optional<String> optTrustedPartyBaseUrl) {
-    return (Organization organization) -> Mono.just(organization)
-        .flatMap(MONO.liftEffectToMono(DTOFactory::toUpdateForm))
-        .flatMap(optTrustedPartyBaseUrl
-            .map(this.client.sendCustomPutRequest(getUri(organization), Void.class))
-            .orElse(this.client.sendPutRequest(getUri(organization), Void.class)))
+  public Mono<Void> updateOrganizationCertificate(Organization organization) {
+    return MONO.combineM(
+        MONO.fromEitherOptional(organization.getTrustedPartyBaseUrl()),
+        Mono.just(organization).flatMap(MONO.liftEffectToMono(DTOFactory::toUpdateForm)),
+        (optTrustedPartyBaseUrl, form) -> Mono.just(form)
+            .flatMap(optTrustedPartyBaseUrl
+                .map(this.client.sendCustomPutRequest(getUri(organization), Void.class))
+                .orElse(this.client.sendPutRequest(getUri(organization), Void.class))))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Certificates for organization with identifier '" + organization.getIdentifier() + "' has been updated."))
         .doOnError(throwable -> LOGGER.error(
             LOG_PREFIX + "Certificates for organization with identifier '" + organization.getIdentifier() + "' has not been updated!\n" + throwable.getMessage()))

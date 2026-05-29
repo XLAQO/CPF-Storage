@@ -89,6 +89,10 @@ public interface PublisherHelper {
       return this.<T> makeSureNotNullWithMessage(this.defaultNullMessage(value)).apply(value);
     }
 
+    public <T> Function<T, Mono<T>> makeSureNotNull(ApplicationException exception) {
+      return this.<T> makeSure(Objects::nonNull, _ -> exception);
+    }
+
     public <T> Function<T, Mono<T>> makeSureNotNullWithMessage(String message) {
       return this.<T> makeSure(Objects::nonNull, message);
     }
@@ -163,6 +167,13 @@ public interface PublisherHelper {
           .orElse(Mono.empty());
     }
 
+    public <I, O> Function<I, Mono<O>> liftOptionalToMono(Function<I, Optional<O>> maybe, Function<I, ApplicationException> exceptionBuilder) {
+      return (I value) -> maybe
+          .apply(value)
+          .map(Mono::justOrEmpty)
+          .orElse(Mono.error(exceptionBuilder.apply(value)));
+    }
+
     public <I, O> Function<I, Flux<O>> liftEffectToFlux(Function<I, Either<ApplicationException, List<O>>> kleisliArrow) {
       return (I value) -> kleisliArrow
           .apply(value)
@@ -178,6 +189,11 @@ public interface PublisherHelper {
     public <T> Mono<T> fromEither(Either<ApplicationException, T> valueOrException) {
       return valueOrException
           .fold(Mono::error, Mono::justOrEmpty);
+    }
+
+    public <T> Mono<Optional<T>> fromEitherOptional(Either<ApplicationException, Optional<T>> valueOrException) {
+      return valueOrException
+          .fold(Mono::error, Mono::just);
     }
 
     public <T> Mono<T> fromOptional(Optional<T> maybe) {
@@ -202,6 +218,13 @@ public interface PublisherHelper {
 
     public <I1, I2, O> Function<I2, Function<I1, Mono<O>>> flipped(Function<I1, Function<I2, Mono<O>>> function) {
       return (I2 v2) -> (I1 v1) -> function.apply(v1).apply(v2);
+    }
+
+    public <A, B, R> Mono<R> combine(
+        Mono<A> monoA,
+        Mono<B> monoB,
+        BiFunction<A, B, R> combiner) {
+      return monoA.flatMap(a -> monoB.map(b -> combiner.apply(a, b)));
     }
 
     public <A, B, R> Mono<R> combineM(

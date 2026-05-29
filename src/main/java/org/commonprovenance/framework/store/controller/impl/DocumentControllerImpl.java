@@ -115,41 +115,40 @@ public class DocumentControllerImpl implements DocumentController {
       @ApiResponse(responseCode = "409", description = "Conflict with existing data", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = BadRequestDTO.class))),
       @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
   })
-  public Mono<TokenResponseDTO> createProvDocument(
-      @RequestBody DocumentFormDTO body) {
-    return ModelFactory.toDomain(body)
-        .delayUntil((Document document) -> Mono.just(document)
+  public Mono<TokenResponseDTO> createProvDocument(@RequestBody DocumentFormDTO body) {
+    // return ModelFactory.toDomain(body)
+        // .delayUntil((Document document) -> Mono.just(document)
             // validate Organization and TrustedParty first
-            .map(DocumentUtils::buildOrganization)
-            .delayUntil(this.organizationService::checkOrganizationExists)
-            .flatMap(this.organizationService::getOrganization)
-            .delayUntil(MONO.liftEffectToMono(OrganizationUtils::validateTrustedParty))
-            .onErrorMap(ApplicationExceptionFactory.to(ConflictException::new))
+            // .map(DocumentUtils::buildOrganization)
+            // .delayUntil(this.organizationService::checkOrganizationExists)
+            // .flatMap(this.organizationService::getOrganization)
+            // .delayUntil(MONO.liftEffectToMono(OrganizationUtils::validateTrustedParty))
+            // .onErrorMap(ApplicationExceptionFactory.to(ConflictException::new))
             // --------------------------
             // validate document signature
-            .delayUntil(trustedPartyWebService.verifySignature(document)))
-        .doOnNext(_ -> LOGGER.debug("Request verified"))
+            // .delayUntil(trustedPartyWebService.verifySignature(document)))
+        // .doOnNext(_ -> LOGGER.debug("Request verified"))
 
         // --------------------------
         // deserialize document into CpmDocument class
-        .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
-        .doOnNext(_ -> LOGGER.debug("Document deserialized"))
+        // .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
+        // .doOnNext(_ -> LOGGER.debug("Document deserialized"))
 
-        .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
+        // .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
         // --------------------------
         // get document id from deserialized document - has to be bundle identifier local part
-        .flatMap(MONO.liftEffectToMono(DocumentUtils::setDocumentIdentifier))
+        // .flatMap(MONO.liftEffectToMono(DocumentUtils::setDocumentIdentifier))
         // --------------------------
         // check document does not exists yet
-        .delayUntil(this.documentService::checkDocumentDoesNotExists)
+        // .delayUntil(this.documentService::checkDocumentDoesNotExists)
         // --------------------------
         // check connectors
-        .delayUntil(this.documentService::checkBackwardConnectorsResolvable)
-        .delayUntil(this.documentService::checkSpecForwardConnectorsResolvable)
-        .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkSpecForwardConnetorsAttrs))
-        .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkBackwardConnetorsAttrs))
-        .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkForwardConnetorsAttrs))
-        .doOnNext(_ -> LOGGER.debug("Request validated"))
+        // .delayUntil(this.documentService::checkBackwardConnectorsResolvable)
+        // .delayUntil(this.documentService::checkSpecForwardConnectorsResolvable)
+        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkSpecForwardConnetorsAttrs))
+        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkBackwardConnetorsAttrs))
+        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkForwardConnetorsAttrs))
+        // .doOnNext(_ -> LOGGER.debug("Request validated"))
 
         // TODO: check hashes in connectors
         // TODO: check cpm constraints
@@ -232,7 +231,7 @@ public class DocumentControllerImpl implements DocumentController {
                 .map(Optional::ofNullable)
                 .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
                 .map(token -> token.withDocument(provDoc)))
-            .flatMap(token -> Mono.justOrEmpty(token.getDocument().getOrganizationIdentifier())
+            .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
                 .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
                 .map(token::withTrustedParty)))
         .flatMap(DTOFactory::toDocumentDTO);
@@ -275,7 +274,7 @@ public class DocumentControllerImpl implements DocumentController {
                 .map(Optional::ofNullable)
                 .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
                 .map(token -> token.withDocument(provDoc)))
-            .flatMap(token -> Mono.justOrEmpty(token.getDocument().getOrganizationIdentifier())
+            .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
                 .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
                 .map(token::withTrustedParty)))
         .flatMap(DTOFactory::toDocumentDTO);

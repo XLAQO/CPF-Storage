@@ -33,7 +33,7 @@ class EntityFactoryTest {
         .assertNext(entity -> {
           assertEquals(testId, entity.getIdentifier());
           assertEquals(base64StringGraph, entity.getGraph());
-          assertEquals(format, entity.getFormat());
+          assertEquals(format, entity.getDocumentFormat());
         })
         .verifyComplete();
   }

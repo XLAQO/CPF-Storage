@@ -12,8 +12,9 @@ import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.OrganizationFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.NodeFactory;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.OrganizationNodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.OrganizationNeo4jRepositoryClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
   @Override
   public Mono<Void> save(Organization organization) {
     return Mono.just(organization)
-        .map(NodeFactory::toEntity)
+        .flatMap(MONO.liftEffectToMono(OrganizationNodeFactory::fromModel))
         .flatMap(client::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization has been saved into DB."))
@@ -68,7 +69,7 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
   @Override
   public Mono<Organization> findByIdentifier(String identifier) {
     return Mono.just(identifier)
-        .flatMapMany(client::getIdByIdentifier)
+        .flatMapMany(client::getByIdentifier)
         .single()
         .onErrorMap(
             NoSuchElementException.class,
@@ -76,9 +77,7 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
         .onErrorMap(
             IndexOutOfBoundsException.class,
             _ -> new ConflictException("There is more then one organization with identifier '" + identifier + "'!"))
-        .flatMap(client::findById)
-        .switchIfEmpty(Mono.error(() -> new NotFoundException("Organization with identifier '" + identifier + "' has not been found!")))
-        .flatMap(ModelFactory::toDomain)
+        .map(OrganizationFactory::fromPersistance)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + identifier + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)

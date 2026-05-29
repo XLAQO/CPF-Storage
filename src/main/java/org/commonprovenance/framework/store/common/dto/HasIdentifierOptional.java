@@ -2,6 +2,6 @@ package org.commonprovenance.framework.store.common.dto;
 
 import java.util.Optional;
 
-public interface HasOptionalIdentifier {
+public interface HasIdentifierOptional {
   Optional<String> getIdentifier();
 }

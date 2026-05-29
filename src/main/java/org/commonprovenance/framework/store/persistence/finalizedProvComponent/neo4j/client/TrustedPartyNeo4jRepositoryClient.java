@@ -34,6 +34,13 @@ public interface TrustedPartyNeo4jRepositoryClient extends ReactiveNeo4jReposito
   Flux<String> findIdByOrganizationIdentifier(@Param("organizationIdentifier") String organizationIdentifier);
 
   @Query("""
+        MATCH (organization:Organization)-[:trusts]->(trustedParty:TrustedParty)
+        WHERE organization.identifier = $organizationIdentifier
+        RETURN trustedParty
+      """)
+  Flux<TrustedPartyNode> findByOrganizationIdentifier(@Param("organizationIdentifier") String organizationIdentifier);
+
+  @Query("""
       MATCH (trustedParty:TrustedParty)
       WHERE elementId(trustedParty) = $id
       RETURN trustedParty.url as url

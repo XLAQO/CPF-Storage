@@ -25,4 +25,6 @@ public interface OrganizationService {
 
   Mono<Void> linkOwnedDocument(Document document);
 
+  Mono<Void> storeDocument(Organization organization);
+
 }

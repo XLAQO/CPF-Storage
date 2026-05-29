@@ -3,14 +3,24 @@ package org.commonprovenance.framework.store.web.trustedParty.dto.form;
 import java.time.Instant;
 
 import org.commonprovenance.framework.store.common.dto.HasCreatedOn;
-import org.commonprovenance.framework.store.common.dto.HasDocument;
+import org.commonprovenance.framework.store.common.dto.HasFormatSerialized;
+import org.commonprovenance.framework.store.common.dto.HasGraph;
+import org.commonprovenance.framework.store.common.dto.HasGraphType;
 import org.commonprovenance.framework.store.common.dto.HasOrganizationId;
 import org.commonprovenance.framework.store.common.dto.HasSignature;
+import org.commonprovenance.framework.store.common.dto.HasTokenFormat;
 import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
+import org.commonprovenance.framework.store.model.Format;
+import org.commonprovenance.framework.store.model.GraphType;
 
-public class IssueTokenTPFormDTO extends ValidatableDTO
-    implements HasOrganizationId<IssueTokenTPFormDTO>, HasDocument<IssueTokenTPFormDTO>,
-    HasSignature<IssueTokenTPFormDTO>, HasCreatedOn<IssueTokenTPFormDTO> {
+public class IssueTokenTPFormDTO extends ValidatableDTO implements
+    HasOrganizationId<IssueTokenTPFormDTO>,
+    HasGraph<IssueTokenTPFormDTO>,
+    HasFormatSerialized<IssueTokenTPFormDTO>,
+    HasSignature<IssueTokenTPFormDTO>,
+    HasGraphType<IssueTokenTPFormDTO>,
+    HasCreatedOn<IssueTokenTPFormDTO>,
+    HasTokenFormat<IssueTokenTPFormDTO> {
   private final String organizationId;
   private final String document;
   private final String documentFormat;
@@ -50,33 +60,33 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
   public IssueTokenTPFormDTO withOrganizationId(String organizationId) {
     return new IssueTokenTPFormDTO(
         organizationId,
-        this.getDocument(),
+        this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
-        this.getType(),
+        this.getGraphType(),
         this.getCreatedOn(),
         this.getTokenFormat());
   }
 
   @Override
-  public IssueTokenTPFormDTO withDocument(String document) {
+  public IssueTokenTPFormDTO withGraph(String document) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
         document,
         this.getDocumentFormat(),
         this.getSignature(),
-        this.getType(),
+        this.getGraphType(),
         this.getCreatedOn(),
         this.getTokenFormat());
   }
 
-  public IssueTokenTPFormDTO withDocumentFormat(String format) {
+  public IssueTokenTPFormDTO withDocumentFormat(Format format) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
-        this.getDocument(),
-        format,
+        this.getGraph(),
+        format.toString().toLowerCase(),
         this.getSignature(),
-        this.getType(),
+        this.getGraphType(),
         this.getCreatedOn(),
         this.getTokenFormat());
   }
@@ -84,21 +94,21 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
   public IssueTokenTPFormDTO withSignature(String signature) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
-        this.getDocument(),
+        this.getGraph(),
         this.getDocumentFormat(),
         signature,
-        this.getType(),
+        this.getGraphType(),
         this.getCreatedOn(),
         this.getTokenFormat());
   }
 
-  public IssueTokenTPFormDTO withGraphType(String type) {
+  public IssueTokenTPFormDTO withGraphType(GraphType graphType) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
-        this.getDocument(),
+        this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
-        type,
+        graphType.toString().toLowerCase(),
         this.getCreatedOn(),
         this.getTokenFormat());
   }
@@ -106,10 +116,10 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
   public IssueTokenTPFormDTO withCreatedOn(Long createdOn) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
-        this.getDocument(),
+        this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
-        this.getType(),
+        this.getGraphType(),
         createdOn,
         this.getTokenFormat());
   }
@@ -117,10 +127,10 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
   public IssueTokenTPFormDTO withTokenFormat(String tokenFormat) {
     return new IssueTokenTPFormDTO(
         this.getOrganizationId(),
-        this.getDocument(),
+        this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
-        this.getType(),
+        this.getGraphType(),
         this.getCreatedOn(),
         tokenFormat);
   }
@@ -130,7 +140,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
     return organizationId;
   }
 
-  public String getDocument() {
+  public String getGraph() {
     return document;
   }
 
@@ -142,7 +152,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO
     return signature;
   }
 
-  public String getType() {
+  public String getGraphType() {
     return type;
   }
 

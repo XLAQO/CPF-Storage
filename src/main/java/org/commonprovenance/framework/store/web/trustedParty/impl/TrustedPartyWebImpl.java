@@ -9,7 +9,6 @@ import java.util.function.Function;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
-import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.GraphType;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
@@ -17,7 +16,8 @@ import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.web.trustedParty.TrustedPartyWeb;
 import org.commonprovenance.framework.store.web.trustedParty.client.ClientTrustedParty;
-import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.DTOFactory;
+import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.IssueTokenFormFactory;
+import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.VerifySignatureFormFactory;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.TokenTPResponseDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.TrustedPartyTPResponseDTO;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
   }
 
   @Override
-  public Mono<TrustedParty> getInfo(Optional<String> optTrustedPartyBaseUrl) {
+  public Mono<TrustedParty> getTrustedParty(Optional<String> optTrustedPartyBaseUrl) {
     return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
@@ -60,27 +60,28 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
   }
 
   @Override
-  public Function<Document, Mono<Token>> issueGraphToken(Optional<String> optTrustedPartyBaseUrl, GraphType graphType) {
-    return (Document document) -> MONO.fromEither(DTOFactory.toForm(document, graphType))
-        .flatMap(optTrustedPartyBaseUrl
+  public Function<Organization, Mono<Token>> issueGraphToken(GraphType graphType) {
+    return (Organization organization) -> MONO.fromEither(IssueTokenFormFactory.fromModel(organization, graphType))
+        .flatMap(organization.getTrustedParty()
+            .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
             .orElse(this.client.sendPostRequest("/issueToken", TokenTPResponseDTO.class)))
         .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
-        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'."))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'."))
         .doOnError(throwable -> LOGGER.error(
-            LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!\n" + throwable.getMessage()))
+            LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!\n" + throwable.getMessage()))
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(
-            new InternalApplicationException("Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'!")));
+            new InternalApplicationException("Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!")));
   }
 
   @Override
-  public Function<Document, Mono<Boolean>> verifySignature(Organization organization) {
-    return (Document document) -> MONO.fromEither(DTOFactory.toForm(organization, document))
+  public Mono<Boolean> verifySignature(Organization organization) {
+    return MONO.fromEither(VerifySignatureFormFactory.fromModel(organization))
         .flatMap(organization.getTrustedParty()
             .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/verifySignature", Void.class))
             .orElse(this.client.sendPostRequest("/verifySignature", Void.class)))
-        .then(Mono.just(true))
+        .thenReturn(true)
         .onErrorResume(BadRequest.class, _ -> Mono.just(false))
         .doOnSuccess(valid -> {
           if (valid)

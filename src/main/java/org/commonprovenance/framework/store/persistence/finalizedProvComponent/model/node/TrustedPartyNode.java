@@ -1,6 +1,13 @@
 package org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node;
 
+import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
 import org.commonprovenance.framework.store.common.dto.HasId;
+import org.commonprovenance.framework.store.common.dto.HasIsChecked;
+import org.commonprovenance.framework.store.common.dto.HasIsDefault;
+import org.commonprovenance.framework.store.common.dto.HasIsValid;
+import org.commonprovenance.framework.store.common.dto.HasName;
+import org.commonprovenance.framework.store.common.dto.HasUrl;
+import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
@@ -8,7 +15,14 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 
 @Node("TrustedParty")
-public class TrustedPartyNode implements HasId {
+public class TrustedPartyNode extends ValidatableDTO implements
+    HasId,
+    HasName<TrustedPartyNode>,
+    HasClientCertificate<TrustedPartyNode>,
+    HasUrl<TrustedPartyNode>,
+    HasIsChecked<TrustedPartyNode>,
+    HasIsValid<TrustedPartyNode>,
+    HasIsDefault<TrustedPartyNode> {
   @Id
   @GeneratedValue
   private final String id;
@@ -63,6 +77,16 @@ public class TrustedPartyNode implements HasId {
     this.isDefault = isDefault;
   }
 
+  public TrustedPartyNode() {
+    this.id = null;
+    this.name = null;
+    this.clientCertificate = null;
+    this.url = null;
+    this.isChecked = false;
+    this.isValid = false;
+    this.isDefault = false;
+  }
+
   public TrustedPartyNode withId(String id) {
     return new TrustedPartyNode(
         id,
@@ -70,7 +94,74 @@ public class TrustedPartyNode implements HasId {
         this.getClientCertificate(),
         this.getUrl(),
         this.getIsChecked(),
-        this.getIsValid(), this.getIsDefault());
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withName(String name) {
+    return new TrustedPartyNode(
+        this.getId(),
+        name,
+        this.getClientCertificate(),
+        this.getUrl(),
+        this.getIsChecked(),
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withClientCertificate(String clientCertificate) {
+    return new TrustedPartyNode(
+        this.getId(),
+        this.getName(),
+        clientCertificate,
+        this.getUrl(),
+        this.getIsChecked(),
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withUrl(String url) {
+    return new TrustedPartyNode(
+        this.getId(),
+        this.getName(),
+        this.getClientCertificate(),
+        url,
+        this.getIsChecked(),
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withIsChecked(Boolean isChecked) {
+    return new TrustedPartyNode(
+        this.getId(),
+        this.getName(),
+        this.getClientCertificate(),
+        this.getUrl(),
+        isChecked,
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withIsValid(Boolean isValid) {
+    return new TrustedPartyNode(
+        this.getId(),
+        this.getName(),
+        this.getClientCertificate(),
+        this.getUrl(),
+        this.getIsChecked(),
+        isValid,
+        this.getIsDefault());
+  }
+
+  public TrustedPartyNode withIsDefault(Boolean isDefault) {
+    return new TrustedPartyNode(
+        this.getId(),
+        this.getName(),
+        this.getClientCertificate(),
+        this.getUrl(),
+        this.getIsChecked(),
+        this.getIsValid(),
+        isDefault);
   }
 
   public String getId() {

@@ -22,10 +22,8 @@ import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
 import org.commonprovenance.framework.store.model.TrustedParty;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.DocumentNode;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.OrganizationNode;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.TokenNode;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.node.TrustedPartyNode;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.relation.Trusts;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.CertificateTPResponseDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.DocumentTPResponseDTO;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.OrganizationTPResponseDTO;
@@ -84,27 +82,13 @@ public class ModelFactory {
         .withId(trustedParty.getId());
   }
 
-  private static Organization fromPersistance(OrganizationNode organization) {
-    Organization org = new Organization(
-        organization.getIdentifier(),
-        organization.getClientCertificate(),
-        organization.getIntermediateCertificates());
-
-    return organization.getTrusts().stream()
-        .map(Trusts::getTrustedParty)
-        .map(ModelFactory::fromPersistance)
-        .findFirst()
-        .map(org::withTrustedParty)
-        .orElse(org);
-  }
-
   private static Either<ApplicationException, Token> fromPersistance(TokenNode token) {
-    return Either.<ApplicationException, String>right(token.getJwt())
+    return Either.<ApplicationException, String> right(token.getJwt())
         .flatMap(JwtUtils::extractTokenTimestamp)
         .map(timestamp -> new Token(
             token.getJwt(),
             ModelFactory.toDomain(token.getWasIssuedBy().getFirst().getTrustedParty()),
-            ModelFactory.toDomain(token.getBelongsTo().getFirst().getDocument()),
+            ModelFactory.toDomain(token.getHasToken().getFirst().getToken()),
             timestamp)); // TODO: Get token creation from generation Activity
   }
 
@@ -130,7 +114,7 @@ public class ModelFactory {
   }
 
   private static Either<ApplicationException, Token> fromDto(TokenTPResponseDTO dto) {
-    return Either.<ApplicationException, String>right(dto.getJwt())
+    return Either.<ApplicationException, String> right(dto.getJwt())
         .flatMap(JwtUtils::extractTokenTimestamp)
         .map(timestamp -> new Token(
             dto.getJwt(),
@@ -147,29 +131,30 @@ public class ModelFactory {
 
   // ---
   // Trusted Party
-  public static Mono<Organization> toDomain(OrganizationTPResponseDTO dto) {
-    return MONO.makeSureNotNull(dto)
+  public static Either<ApplicationException, Organization> toDomain(OrganizationTPResponseDTO dto) {
+    return EITHER.makeSureNotNull(dto)
         .map(ModelFactory::fromDto);
   }
 
-  public static Mono<Organization> toDomain(CertificateTPResponseDTO dto) {
-    return MONO.makeSureNotNull(dto)
+  public static Either<ApplicationException, Organization> toDomain(CertificateTPResponseDTO dto) {
+    return EITHER.makeSureNotNull(dto)
         .map(ModelFactory::fromDto);
   }
 
-  public static Mono<Document> toDomain(DocumentTPResponseDTO dto) {
-    return MONO.makeSureNotNull(dto)
+  public static Either<ApplicationException, Document> toDomain(DocumentTPResponseDTO dto) {
+    return EITHER.makeSureNotNull(dto)
         .map(ModelFactory::fromDto);
   }
 
   public static Either<ApplicationException, Token> toDomain(TokenTPResponseDTO dto) {
-    return Either.<ApplicationException, TokenTPResponseDTO>right(dto)
+    return Either.<ApplicationException, TokenTPResponseDTO> right(dto)
         .flatMap(EITHER::makeSureNotNull)
         .flatMap(ModelFactory::fromDto);
   }
 
-  public static Function<TrustedPartyTPResponseDTO, Mono<TrustedParty>> toDomain(String url, Boolean isDefault) {
-    return (TrustedPartyTPResponseDTO dto) -> MONO.makeSureNotNull(dto)
+  public static Function<TrustedPartyTPResponseDTO, Either<ApplicationException, TrustedParty>> toDomain(String url, Boolean isDefault) {
+    return (TrustedPartyTPResponseDTO dto) -> Either.<ApplicationException, TrustedPartyTPResponseDTO> right(dto)
+        .flatMap(EITHER::makeSureNotNull)
         .map(ModelFactory::fromDto)
         .map((TrustedParty trustedParty) -> trustedParty.withUrl(url))
         .map((TrustedParty trustedParty) -> trustedParty.withIsDefault(isDefault));
@@ -184,12 +169,7 @@ public class ModelFactory {
   // Persistence
   public static Document toDomain(DocumentNode entity) {
     return ModelFactory.fromPersistance(entity)
-        .withFormat(ModelFactory.getFormatNullable(entity));
-  }
-
-  public static Mono<Organization> toDomain(OrganizationNode entity) {
-    return MONO.makeSureNotNull(entity)
-        .map(ModelFactory::fromPersistance);
+        .withDocumentFormat(ModelFactory.getFormatNullable(entity));
   }
 
   public static TrustedParty toDomain(TrustedPartyNode entity) {
@@ -198,7 +178,7 @@ public class ModelFactory {
   }
 
   public static Either<ApplicationException, Token> toDomain(TokenNode entity) {
-    return Either.<ApplicationException, TokenNode>right(entity)
+    return Either.<ApplicationException, TokenNode> right(entity)
         .flatMap(EITHER::makeSureNotNull)
         .flatMap(ModelFactory::fromPersistance);
   }
@@ -210,19 +190,19 @@ public class ModelFactory {
         .map((Document document) -> document.withFormat(formDTO.getDocumentFormat()));
   }
 
-  public static Mono<Organization> toDomain(OrganizationFormDTO formDTO) {
-    return MONO.makeSureNotNull(formDTO)
+  public static Either<ApplicationException, Organization> toDomain(OrganizationFormDTO formDTO) {
+    return EITHER.makeSureNotNull(formDTO)
         .map(ModelFactory::fromDto);
   }
 
   public static Mono<UUID> toUUID(String uuid) {
-    return MONO.<String>makeSureNotNullWithMessage("DTO 'id' can not be null.").apply(uuid)
-        .flatMap(MONO.<String>makeSure(
+    return MONO.<String> makeSureNotNullWithMessage("DTO 'id' can not be null.").apply(uuid)
+        .flatMap(MONO.<String> makeSure(
             Validators::isUUID,
             (String id) -> new ArgumentValidatorException("Id '" + id + "' is not valid UUID string.")))
         .map(UUID::fromString)
         .onErrorResume(IllegalArgumentException.class,
-            MONO.<IllegalArgumentException, UUID>exceptionWrapper(e -> "Can not parse uuid: " + e.getMessage()))
-        .onErrorResume(MONO.<Throwable, UUID>exceptionWrapper());
+            MONO.<IllegalArgumentException, UUID> exceptionWrapper(e -> "Can not parse uuid: " + e.getMessage()))
+        .onErrorResume(MONO.<Throwable, UUID> exceptionWrapper());
   }
 }

@@ -2,8 +2,20 @@ package org.commonprovenance.framework.store.model;
 
 import java.util.Optional;
 
-public class TrustedParty {
-  private final Optional<String> id;
+import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
+import org.commonprovenance.framework.store.common.dto.HasIsChecked;
+import org.commonprovenance.framework.store.common.dto.HasIsDefault;
+import org.commonprovenance.framework.store.common.dto.HasIsValid;
+import org.commonprovenance.framework.store.common.dto.HasName;
+import org.commonprovenance.framework.store.common.dto.HasUrlOptional;
+
+public class TrustedParty implements
+    HasName<TrustedParty>,
+    HasClientCertificate<TrustedParty>,
+    HasUrlOptional<TrustedParty>,
+    HasIsChecked<TrustedParty>,
+    HasIsValid<TrustedParty>,
+    HasIsDefault<TrustedParty> {
   private final String name;
   private final String certificate;
   private final Optional<String> url;
@@ -12,14 +24,12 @@ public class TrustedParty {
   private final Boolean isDefault;
 
   public TrustedParty(
-      String id,
       String name,
       String certificate,
       String url,
       Boolean isChecked,
       Boolean isValid,
       Boolean isDefault) {
-    this.id = Optional.ofNullable(id);
     this.name = name;
     this.certificate = certificate;
     this.url = Optional.ofNullable(url);
@@ -32,48 +42,38 @@ public class TrustedParty {
       String name,
       String certificate,
       String url,
-      Boolean isChecked,
-      Boolean isValid,
       Boolean isDefault) {
-    this.id = Optional.empty();
     this.name = name;
     this.certificate = certificate;
     this.url = Optional.ofNullable(url);
-    this.isChecked = isChecked;
-    this.isValid = isValid;
-    this.isDefault = isDefault;
-  }
-
-  public TrustedParty(
-      String id,
-      String name,
-      String certificate,
-      String url,
-      Boolean isDefault) {
-    this.id = Optional.ofNullable(id);
-    this.name = name;
-    this.certificate = certificate;
-    this.url = Optional.ofNullable(url);
-    this.isChecked = true;
-    this.isValid = true;
+    this.isChecked = false;
+    this.isValid = false;
     this.isDefault = isDefault;
   }
 
   public TrustedParty(String name, String certificate) {
-    this.id = Optional.empty();
     this.name = name;
     this.certificate = certificate;
     this.url = Optional.empty();
-    this.isChecked = true;
-    this.isValid = true;
+    this.isChecked = false;
+    this.isValid = false;
     this.isDefault = false;
   }
 
-  public TrustedParty withId(String id) {
+  public TrustedParty withName(String clientCertificate) {
     return new TrustedParty(
-        id,
         this.getName(),
-        this.getCertificate(),
+        clientCertificate,
+        this.getUrl().orElse(null),
+        this.getIsChecked(),
+        this.getIsValid(),
+        this.getIsDefault());
+  }
+
+  public TrustedParty withClientCertificate(String name) {
+    return new TrustedParty(
+        name,
+        this.getClientCertificate(),
         this.getUrl().orElse(null),
         this.getIsChecked(),
         this.getIsValid(),
@@ -82,9 +82,8 @@ public class TrustedParty {
 
   public TrustedParty withUrl(String url) {
     return new TrustedParty(
-        this.getId().orElse(null),
         this.getName(),
-        this.getCertificate(),
+        this.getClientCertificate(),
         url,
         this.getIsChecked(),
         this.getIsValid(),
@@ -93,9 +92,8 @@ public class TrustedParty {
 
   public TrustedParty withIsChecked(Boolean isChecked) {
     return new TrustedParty(
-        this.getId().orElse(null),
         this.getName(),
-        this.getCertificate(),
+        this.getClientCertificate(),
         this.getUrl().orElse(null),
         isChecked,
         this.getIsValid(),
@@ -104,9 +102,8 @@ public class TrustedParty {
 
   public TrustedParty withIsValid(Boolean isValid) {
     return new TrustedParty(
-        this.getId().orElse(null),
         this.getName(),
-        this.getCertificate(),
+        this.getClientCertificate(),
         this.getUrl().orElse(null),
         this.getIsChecked(),
         isValid,
@@ -115,24 +112,19 @@ public class TrustedParty {
 
   public TrustedParty withIsDefault(Boolean isDefault) {
     return new TrustedParty(
-        this.getId().orElse(null),
         this.getName(),
-        this.getCertificate(),
+        this.getClientCertificate(),
         this.getUrl().orElse(null),
-        this.getIsChecked(),
-        this.getIsValid(),
+        isDefault || this.getIsChecked(),
+        isDefault || this.getIsValid(),
         isDefault);
-  }
-
-  public Optional<String> getId() {
-    return id;
   }
 
   public String getName() {
     return name;
   }
 
-  public String getCertificate() {
+  public String getClientCertificate() {
     return certificate;
   }
 

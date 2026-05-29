@@ -17,16 +17,14 @@ public interface HasOrganizationId<T extends HasOrganizationId<T>> {
         .orElse(to);
   }
 
-  static <U extends HasOrganizationId<U>, T extends HasOrganizationIdentifier<T>> UnaryOperator<U> addIdentifier(
-      T from) {
+  static <U extends HasOrganizationId<U>, T extends HasOrganizationIdentifier<T>> UnaryOperator<U> addIdentifier(T from) {
     return (U to) -> Optional.ofNullable(from)
         .map(T::getOrganizationIdentifier)
         .map(to::withOrganizationId)
         .orElse(to);
   }
 
-  static <U extends HasOrganizationId<U>, T extends HasOptionalOrganizationIdentifier<T>> UnaryOperator<U> addIdentifier(
-      T from) {
+  static <U extends HasOrganizationId<U>, T extends HasOrganizationIdentifierOptional<T>> UnaryOperator<U> addIdentifier(T from) {
     return (U to) -> Optional.ofNullable(from)
         .flatMap(T::getOrganizationIdentifier)
         .map(to::withOrganizationId)
