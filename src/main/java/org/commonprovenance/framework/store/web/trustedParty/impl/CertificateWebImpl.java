@@ -11,10 +11,10 @@ import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.filter.AccessLogFilter;
 import org.commonprovenance.framework.store.model.Organization;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.OrganizationFactory;
 import org.commonprovenance.framework.store.web.trustedParty.CertificateWeb;
 import org.commonprovenance.framework.store.web.trustedParty.client.ClientTrustedParty;
-import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.DTOFactory;
+import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.UpdateOrganizationFormFactory;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.CertificateTPResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class CertificateWebImpl implements CertificateWeb {
     return (String organizationIdentifier) -> optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest(getUri(organizationIdentifier), CertificateTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest(getUri(organizationIdentifier), CertificateTPResponseDTO.class, Map.of()))
-        .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
+        .flatMap(MONO.liftEffectToMono(OrganizationFactory::buildUnsafe))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Certificates for Organization with identifier '" + organizationIdentifier + "' has been fetched."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
@@ -65,7 +65,7 @@ public class CertificateWebImpl implements CertificateWeb {
   public Mono<Void> updateOrganizationCertificate(Organization organization) {
     return MONO.combineM(
         MONO.fromEitherOptional(organization.getTrustedPartyBaseUrl()),
-        Mono.just(organization).flatMap(MONO.liftEffectToMono(DTOFactory::toUpdateForm)),
+        Mono.just(organization).flatMap(MONO.liftEffectToMono(UpdateOrganizationFormFactory::build)),
         (optTrustedPartyBaseUrl, form) -> Mono.just(form)
             .flatMap(optTrustedPartyBaseUrl
                 .map(this.client.sendCustomPutRequest(getUri(organization), Void.class))

@@ -16,4 +16,14 @@ public interface HasIsDefault<T extends HasIsDefault<T>> {
         .orElse(to);
   }
 
+  static <U extends HasIsDefault<U>, F> UnaryOperator<U> addIsDefaultIfPresent(F from) {
+    return (U to) -> Optional.ofNullable(from)
+        .flatMap((F v) -> (v instanceof HasIsDefault<?> has)
+            ? Optional.of(has)
+            : Optional.empty())
+        .map(HasIsDefault::getIsDefault)
+        .map(to::withIsDefault)
+        .orElse(to);
+  }
+
 }

@@ -2,9 +2,13 @@ package org.commonprovenance.framework.store.web.trustedParty.dto.form;
 
 import java.util.List;
 
+import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
+import org.commonprovenance.framework.store.common.dto.HasIntermediateCertificates;
 import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 
-public class UpdateOrganizationTPFormDTO extends ValidatableDTO {
+public class UpdateOrganizationTPFormDTO extends ValidatableDTO implements
+    HasClientCertificate<UpdateOrganizationTPFormDTO>,
+    HasIntermediateCertificates<UpdateOrganizationTPFormDTO> {
   private final String clientCertificate;
   private final List<String> intermediateCertificates;
 

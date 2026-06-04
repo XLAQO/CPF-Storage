@@ -20,9 +20,9 @@ public interface TrustedPartyNeo4jRepositoryClient extends ReactiveNeo4jReposito
   Flux<String> findIdByName(@Param("name") String name);
 
   @Query("""
-        MATCH (trustedParty:TrustedParty)
-        WHERE trustedParty.is_default = TRUE
-        RETURN elementId(trustedParty) as id
+      MATCH (trustedParty:TrustedParty)
+      WHERE coalesce(properties(trustedParty)['is_default'], false) = true
+      RETURN elementId(trustedParty) as id
       """)
   Flux<String> findDefaultId();
 

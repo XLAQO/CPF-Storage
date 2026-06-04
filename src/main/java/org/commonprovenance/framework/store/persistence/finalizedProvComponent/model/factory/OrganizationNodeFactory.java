@@ -27,17 +27,25 @@ public class OrganizationNodeFactory {
             HasIntermediateCertificates.addIntermediateCertificates(organization)));
   }
 
-  public static Either<ApplicationException, OrganizationNode> fromModel(Organization organization) {
+  public static Either<ApplicationException, OrganizationNode> build(Organization organization) {
     return Either.<ApplicationException, Organization> right(organization)
         .map(OrganizationNodeFactory::mapper)
         .flatMap(EITHER::validateDTO);
   }
 
-  public static Either<ApplicationException, OrganizationNode> fromModelFull(Organization organization) {
+  public static Either<ApplicationException, OrganizationNode> buildWithRelations(Organization organization) {
     return Either.<ApplicationException, Organization> right(organization)
         .map(OrganizationNodeFactory::mapper)
         .flatMap(HasTrustedPartyNodeList.addTrustedParty(organization))
-        .flatMap(HasDocumentNodeList.addDocument(organization))
+        .flatMap(HasDocumentNodeList.addDocumentWithRelations(organization))
+        .flatMap(EITHER::validateDTO);
+  }
+
+  public static Either<ApplicationException, OrganizationNode> buildWithFullRelations(Organization organization) {
+    return Either.<ApplicationException, Organization> right(organization)
+        .map(OrganizationNodeFactory::mapper)
+        .flatMap(HasTrustedPartyNodeList.addTrustedParty(organization))
+        .flatMap(HasDocumentNodeList.addDocumentWithFullRelations(organization))
         .flatMap(EITHER::validateDTO);
   }
 }

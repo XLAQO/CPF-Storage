@@ -24,15 +24,44 @@ public interface HasDocumentNodeList<T extends HasDocumentNodeList<T>> {
   static <T extends HasDocumentNodeList<T>, F extends HasDocumentOptional<F>> Function<T, Either<ApplicationException, T>> addDocument(F from) {
     return (T to) -> EITHER.makeSureNotNull(from)
         .flatMap(EITHER.liftEitherOptional(F::getDocument))
-        .flatMap(DocumentNodeFactory::fromModel)
+        .flatMap(DocumentNodeFactory::build)
         .map(to::withDocument);
   }
+
+  static <T extends HasDocumentNodeList<T>, F extends HasDocumentOptional<F>> Function<T, Either<ApplicationException, T>> addDocumentWithRelations(F from) {
+    return (T to) -> EITHER.makeSureNotNull(from)
+        .flatMap(EITHER.liftEitherOptional(F::getDocument))
+        .flatMap(DocumentNodeFactory::buildWithRelations)
+        .map(to::withDocument);
+  }
+
+  static <T extends HasDocumentNodeList<T>, F extends HasDocumentOptional<F>> Function<T, Either<ApplicationException, T>> addDocumentWithFullRelations(F from) {
+    return (T to) -> EITHER.makeSureNotNull(from)
+        .flatMap(EITHER.liftEitherOptional(F::getDocument))
+        .flatMap(DocumentNodeFactory::buildWithFullRelations)
+        .map(to::withDocument);
+  }
+
+  // ---
 
   static <T extends HasDocumentNodeList<T>, F extends HasDocument<F>> Function<T, Either<ApplicationException, T>> addDocument(F from) {
     return (T to) -> EITHER.makeSureNotNull(from)
         .map(F::getDocument)
-        .flatMap(DocumentNodeFactory::fromModel)
+        .flatMap(DocumentNodeFactory::build)
         .map(to::withDocument);
   }
 
+  static <T extends HasDocumentNodeList<T>, F extends HasDocument<F>> Function<T, Either<ApplicationException, T>> addDocumentWithRelations(F from) {
+    return (T to) -> EITHER.makeSureNotNull(from)
+        .map(F::getDocument)
+        .flatMap(DocumentNodeFactory::buildWithRelations)
+        .map(to::withDocument);
+  }
+
+  static <T extends HasDocumentNodeList<T>, F extends HasDocument<F>> Function<T, Either<ApplicationException, T>> addDocumentWithFullRelations(F from) {
+    return (T to) -> EITHER.makeSureNotNull(from)
+        .map(F::getDocument)
+        .flatMap(DocumentNodeFactory::buildWithFullRelations)
+        .map(to::withDocument);
+  }
 }

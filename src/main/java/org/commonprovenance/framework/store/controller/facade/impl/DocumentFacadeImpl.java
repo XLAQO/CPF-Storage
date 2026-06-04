@@ -1,32 +1,35 @@
 package org.commonprovenance.framework.store.controller.facade.impl;
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
 import org.commonprovenance.framework.store.config.AppConfiguration;
-import org.commonprovenance.framework.store.controller.advice.ApplicationExceptionHandler;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
+import org.commonprovenance.framework.store.controller.dto.response.TokenResponseDTO;
+import org.commonprovenance.framework.store.controller.dto.response.factory.TokenResponseFactory;
 import org.commonprovenance.framework.store.controller.facade.DocumentFacade;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
+import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.DocumentFactory;
 import org.commonprovenance.framework.store.model.utils.DocumentUtils;
 import org.commonprovenance.framework.store.model.utils.OrganizationUtils;
-import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.TrustedPartyNeo4jRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
+import org.commonprovenance.framework.store.service.persistence.metaComponent.MetaProvenanceComponentService;
 import org.commonprovenance.framework.store.service.web.trustedParty.TrustedPartyWebService;
 import org.openprovenance.prov.model.ProvFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import cz.muni.fi.cpm.model.ICpmFactory;
 import cz.muni.fi.cpm.model.ICpmProvFactory;
 import io.vavr.control.Either;
 import reactor.core.publisher.Mono;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Component
 public class DocumentFacadeImpl implements DocumentFacade {
@@ -36,6 +39,8 @@ public class DocumentFacadeImpl implements DocumentFacade {
   private final DocumentService documentService;
   private final OrganizationService organizationService;
   private final TrustedPartyService trustedPartyService;
+
+  private final MetaProvenanceComponentService metaComponentService;
 
   private final TrustedPartyWebService trustedPartyWebService;
 
@@ -50,6 +55,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
       OrganizationService organizationService,
       TrustedPartyService trustedPartyService,
       TrustedPartyWebService trustedPartyWebService,
+      MetaProvenanceComponentService metaComponentService,
       ProvFactory provFactory,
       ICpmFactory cpmFactory,
       ICpmProvFactory cpmProvFactory,
@@ -58,6 +64,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
     this.organizationService = organizationService;
     this.trustedPartyService = trustedPartyService;
 
+    this.metaComponentService = metaComponentService;
     this.trustedPartyWebService = trustedPartyWebService;
 
     this.provFactory = provFactory;
@@ -69,15 +76,15 @@ public class DocumentFacadeImpl implements DocumentFacade {
   }
 
   @Override
-  public Mono<Void> createProvDocument(DocumentFormDTO body) {
-    return Mono.just(body)
-        .delayUntil(MONO.makeSureNotNull(new BadRequestException("Request body can not be null or empty!")))
-        .map(DocumentFormDTO::getOrganizationIdentifier)
+  public Mono<TokenResponseDTO> createProvDocument(String organizationIdentifier, DocumentFormDTO body) {
+    return Mono.just(organizationIdentifier)
+        .delayUntil(MONO.makeSureNotNull(new BadRequestException("Organization identifier can not be null or empty!")))
         .flatMap(organizationService::getOrganizationByIdentifier)
         .delayUntil(MONO.liftEffectToMono(OrganizationUtils::validateTrustedParty))
         .doOnNext(_ -> LOGGER.debug("{} Organization with TrustedParty has been loaded.", LOG_PREFIX))
         .flatMap(MONO.liftEffectToMono(organization -> Either.<ApplicationException, DocumentFormDTO> right(body)
-            .map(DocumentFactory::fromFormDTO)
+            .flatMap(EITHER.makeSureNotNull(_ -> new BadRequestException("Request body can not be null or empty!")))
+            .map(DocumentFactory::build)
             .flatMap(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory))
             .map(organization::withDocument)))
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
@@ -103,7 +110,23 @@ public class DocumentFacadeImpl implements DocumentFacade {
         .doOnNext(_ -> LOGGER.debug("Document has been validated and considered as valid."))
         .delayUntil(this.trustedPartyWebService::issueGraphToken)
         .doOnNext(_ -> LOGGER.debug("Token has been issued by TrustedParty."))
+        .delayUntil(this.organizationService::storeDocument)
+        .doOnNext(_ -> LOGGER.debug("Document has been saved."))
+        .delayUntil(this.metaComponentService::createMetaProvenanceComponentIfNotExists)
+        .delayUntil(this.metaComponentService::addBundleVersionIntoMetaProvenanceComponent)
+        .delayUntil(this.metaComponentService::addTokenIntoMetaProvenanceComponent)
 
+        .doOnNext(_ -> LOGGER.debug("MetaComponent stored"))
+        .flatMap(MONO.liftEffectToMono(TokenResponseFactory::build))
+        .doOnNext(_ -> LOGGER.debug("Finito.."));
+  }
+
+  @Override
+  public Mono<Void> exists(String identifier) {
+    return Mono.justOrEmpty(identifier)
+        .flatMap(MONO.makeSureAsync(
+            this.documentService::existsByIdentifier,
+            id -> new NotFoundException("Document with identifier '" + id + "' does not exist!")))
         .then();
   }
 

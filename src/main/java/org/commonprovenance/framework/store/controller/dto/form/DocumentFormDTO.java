@@ -1,5 +1,8 @@
 package org.commonprovenance.framework.store.controller.dto.form;
 
+import org.commonprovenance.framework.store.common.dto.HasFormat;
+import org.commonprovenance.framework.store.common.dto.HasGraph;
+import org.commonprovenance.framework.store.common.dto.HasSignature;
 import org.commonprovenance.framework.store.controller.validator.IsBase64String;
 import org.commonprovenance.framework.store.controller.validator.IsJsonBase64;
 import org.commonprovenance.framework.store.controller.validator.IsProvBase64Json;
@@ -10,11 +13,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Schema(name = "DocumentForm", description = "Payload used to create a provenance document")
-public class DocumentFormDTO {
+public class DocumentFormDTO implements
+    HasGraph<DocumentFormDTO>,
+    HasFormat<DocumentFormDTO>,
+    HasSignature<DocumentFormDTO> {
 
-  @Schema(description = "Organization identifier owning the document", example = "ORG1", requiredMode = Schema.RequiredMode.REQUIRED)
-  @NotBlank(message = "OrganizationIdentifier should not be null or empty.")
-  private final String organizationIdentifier;
+  // @Schema(description = "Organization identifier owning the document", example = "ORG1", requiredMode = Schema.RequiredMode.REQUIRED)
+  // @NotBlank(message = "OrganizationIdentifier should not be null or empty.")
+  // private final String organizationIdentifier;
 
   @Schema(description = "Base64 encoded PROV JSON document", example = "eyJwcm92On...", requiredMode = Schema.RequiredMode.REQUIRED)
   @NotBlank(message = "Document should not be null or empty.")
@@ -36,25 +42,20 @@ public class DocumentFormDTO {
   // private final Long createdOn;
 
   public DocumentFormDTO(
-      String organizationIdentifier,
       String document,
       Format documentFormat,
       String signature) {
-    this.organizationIdentifier = organizationIdentifier;
     this.document = document;
     this.documentFormat = documentFormat;
     this.signature = signature;
   }
 
-  public String getOrganizationIdentifier() {
-    return organizationIdentifier;
+  @Override
+  public String getGraph() {
+    return this.document;
   }
 
-  public String getDocument() {
-    return document;
-  }
-
-  public Format getDocumentFormat() {
+  public Format getFormat() {
     return documentFormat;
   }
 

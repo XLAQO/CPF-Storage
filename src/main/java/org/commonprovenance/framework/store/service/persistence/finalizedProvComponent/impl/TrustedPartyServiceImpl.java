@@ -2,9 +2,9 @@ package org.commonprovenance.framework.store.service.persistence.finalizedProvCo
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
-import org.commonprovenance.framework.store.exceptions.ConstraintException;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
+import org.commonprovenance.framework.store.model.utils.TrustedPartyUtils;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
 import org.springframework.stereotype.Service;
@@ -81,7 +81,7 @@ public class TrustedPartyServiceImpl implements TrustedPartyService {
         .flatMap(MONO.liftOptionalToMono(Organization::getTrustedParty))
         .map(TrustedParty::getName)
         .flatMap(this.repository::findByName)
-        .delayUntil(MONO.liftEffectToMono(TrustedParty::validate))
+        .delayUntil(MONO.liftEffectToMono(TrustedPartyUtils::validate))
         .hasElement()
         .onErrorReturn(NotFoundException.class, false);
   }

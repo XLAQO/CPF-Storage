@@ -16,4 +16,11 @@ public interface HasFormatSerialized<T extends HasFormatSerialized<T>> {
         .map(to::withDocumentFormat)
         .orElse(to);
   }
+
+  static <T extends HasFormatSerialized<T>, F extends HasFormat<F>> UnaryOperator<T> addFormat(Optional<F> maybeForm) {
+    return (T to) -> maybeForm
+        .map(F::getFormat)
+        .map(to::withDocumentFormat)
+        .orElse(to);
+  }
 }

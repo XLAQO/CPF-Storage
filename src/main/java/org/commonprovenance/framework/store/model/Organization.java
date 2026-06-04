@@ -1,5 +1,6 @@
 package org.commonprovenance.framework.store.model;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,12 +9,13 @@ import org.commonprovenance.framework.store.common.dto.HasDocumentOptional;
 import org.commonprovenance.framework.store.common.dto.HasIdentifier;
 import org.commonprovenance.framework.store.common.dto.HasIntermediateCertificates;
 import org.commonprovenance.framework.store.common.dto.HasTrustedPartyOptional;
+import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 
 import io.vavr.control.Either;
 
-public class Organization implements
+public class Organization extends ValidatableDTO implements
     HasIdentifier<Organization>,
     HasClientCertificate<Organization>,
     HasIntermediateCertificates<Organization>,
@@ -45,6 +47,14 @@ public class Organization implements
     this.identifier = identifier;
     this.clientCertificate = clientCertificate;
     this.intermediateCertificates = intermediateCertificates;
+    this.trustedParty = Optional.empty();
+    this.document = Optional.empty();
+  }
+
+  public Organization() {
+    this.identifier = null;
+    this.clientCertificate = null;
+    this.intermediateCertificates = Collections.emptyList();
     this.trustedParty = Optional.empty();
     this.document = Optional.empty();
   }

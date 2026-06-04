@@ -25,6 +25,12 @@ public class Token implements
     this.createdOn = createdOn;
   }
 
+  public Token() {
+    this.jwt = null;
+    this.trustedParty = Optional.empty();
+    this.createdOn = 0L;
+  }
+
   public Token withJwt(String jwtToken) {
     return new Token(
         jwtToken,

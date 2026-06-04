@@ -9,7 +9,6 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.model.factory.TrustedPartyFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.TrustedPartyNodeFactory;
@@ -37,7 +36,8 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
   @Override
   public Mono<Void> create(TrustedParty trustedParty) {
     return Mono.just(trustedParty)
-        .flatMap(MONO.liftEffectToMono(TrustedPartyNodeFactory::fromModel))
+        .flatMap(MONO.liftEffectToMono(TrustedPartyNodeFactory::build))
+        .doOnSuccess(System.out::println)
         .flatMap(trustedPartyClient::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party has been saved into DB."))
@@ -57,7 +57,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
             _ -> new ConflictException("There is more then one TrustedParty with name '" + name + "'!"))
         .flatMap(trustedPartyClient::findById)
         .switchIfEmpty(Mono.error(() -> new NotFoundException("TrustedParty with name '" + name + "' has not found!")))
-        .map(ModelFactory::toDomain)
+        .map(TrustedPartyFactory::build)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party with name '" + name + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
@@ -80,7 +80,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
             _ -> new ConflictException("There is more then one default TrustedParty!"))
         .flatMap(trustedPartyClient::findById)
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Default TrustedParty has not been found!")))
-        .map(ModelFactory::toDomain)
+        .map(TrustedPartyFactory::build)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Default TrustedParty has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
@@ -101,7 +101,7 @@ public class TrustedPartyNeo4jRepository implements TrustedPartyRepository {
         .onErrorMap(
             IndexOutOfBoundsException.class,
             _ -> new ConflictException("Organization with identifier '" + organizationIdentifier + "' has more then one TrustedParty!"))
-        .map(TrustedPartyFactory::fromPersistance)
+        .map(TrustedPartyFactory::build)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party for organization with identifier '" + organizationIdentifier + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)

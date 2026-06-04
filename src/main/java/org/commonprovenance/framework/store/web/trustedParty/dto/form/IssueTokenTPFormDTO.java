@@ -6,7 +6,7 @@ import org.commonprovenance.framework.store.common.dto.HasCreatedOn;
 import org.commonprovenance.framework.store.common.dto.HasFormatSerialized;
 import org.commonprovenance.framework.store.common.dto.HasGraph;
 import org.commonprovenance.framework.store.common.dto.HasGraphType;
-import org.commonprovenance.framework.store.common.dto.HasOrganizationId;
+import org.commonprovenance.framework.store.common.dto.HasIdentifier;
 import org.commonprovenance.framework.store.common.dto.HasSignature;
 import org.commonprovenance.framework.store.common.dto.HasTokenFormat;
 import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
@@ -14,7 +14,7 @@ import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.GraphType;
 
 public class IssueTokenTPFormDTO extends ValidatableDTO implements
-    HasOrganizationId<IssueTokenTPFormDTO>,
+    HasIdentifier<IssueTokenTPFormDTO>,
     HasGraph<IssueTokenTPFormDTO>,
     HasFormatSerialized<IssueTokenTPFormDTO>,
     HasSignature<IssueTokenTPFormDTO>,
@@ -57,9 +57,9 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
   }
 
   @Override
-  public IssueTokenTPFormDTO withOrganizationId(String organizationId) {
+  public IssueTokenTPFormDTO withIdentifier(String identifier) {
     return new IssueTokenTPFormDTO(
-        organizationId,
+        identifier,
         this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
@@ -71,7 +71,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
   @Override
   public IssueTokenTPFormDTO withGraph(String document) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         document,
         this.getDocumentFormat(),
         this.getSignature(),
@@ -82,7 +82,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
 
   public IssueTokenTPFormDTO withDocumentFormat(Format format) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         this.getGraph(),
         format.toString().toLowerCase(),
         this.getSignature(),
@@ -93,7 +93,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
 
   public IssueTokenTPFormDTO withSignature(String signature) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         this.getGraph(),
         this.getDocumentFormat(),
         signature,
@@ -104,7 +104,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
 
   public IssueTokenTPFormDTO withGraphType(GraphType graphType) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
@@ -115,7 +115,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
 
   public IssueTokenTPFormDTO withCreatedOn(Long createdOn) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
@@ -126,7 +126,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
 
   public IssueTokenTPFormDTO withTokenFormat(String tokenFormat) {
     return new IssueTokenTPFormDTO(
-        this.getOrganizationId(),
+        this.getIdentifier(),
         this.getGraph(),
         this.getDocumentFormat(),
         this.getSignature(),
@@ -136,7 +136,7 @@ public class IssueTokenTPFormDTO extends ValidatableDTO implements
   }
 
   @Override
-  public String getOrganizationId() {
+  public String getIdentifier() {
     return organizationId;
   }
 

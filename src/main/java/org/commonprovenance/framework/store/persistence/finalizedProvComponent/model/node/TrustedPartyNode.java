@@ -192,4 +192,10 @@ public class TrustedPartyNode extends ValidatableDTO implements
     return isDefault;
   }
 
+  @Override
+  public String toString() {
+    return "TrustedPartyNode [id=" + id + ", name=" + name + ", clientCertificate=" + clientCertificate + ", url=" + url + ", isChecked=" + isChecked + ", isValid=" + isValid
+        + ", isDefault=" + isDefault + "]";
+  }
+
 }

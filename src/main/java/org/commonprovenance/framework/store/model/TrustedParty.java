@@ -8,8 +8,9 @@ import org.commonprovenance.framework.store.common.dto.HasIsDefault;
 import org.commonprovenance.framework.store.common.dto.HasIsValid;
 import org.commonprovenance.framework.store.common.dto.HasName;
 import org.commonprovenance.framework.store.common.dto.HasUrlOptional;
+import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 
-public class TrustedParty implements
+public class TrustedParty extends ValidatableDTO implements
     HasName<TrustedParty>,
     HasClientCertificate<TrustedParty>,
     HasUrlOptional<TrustedParty>,
@@ -60,20 +61,30 @@ public class TrustedParty implements
     this.isDefault = false;
   }
 
-  public TrustedParty withName(String clientCertificate) {
+  public TrustedParty() {
+    this.name = null;
+    this.certificate = null;
+    this.url = Optional.empty();
+    this.isChecked = false;
+    this.isValid = false;
+    this.isDefault = false;
+
+  }
+
+  public TrustedParty withName(String name) {
     return new TrustedParty(
-        this.getName(),
-        clientCertificate,
+        name,
+        this.getClientCertificate(),
         this.getUrl().orElse(null),
         this.getIsChecked(),
         this.getIsValid(),
         this.getIsDefault());
   }
 
-  public TrustedParty withClientCertificate(String name) {
+  public TrustedParty withClientCertificate(String certificate) {
     return new TrustedParty(
-        name,
-        this.getClientCertificate(),
+        this.getName(),
+        certificate,
         this.getUrl().orElse(null),
         this.getIsChecked(),
         this.getIsValid(),
@@ -148,6 +159,11 @@ public class TrustedParty implements
 
   public Boolean getIsDefault() {
     return isDefault;
+  }
+
+  @Override
+  public String toString() {
+    return "TrustedParty [name=" + name + ", certificate=" + certificate + ", url=" + url + ", isChecked=" + isChecked + ", isValid=" + isValid + ", isDefault=" + isDefault + "]";
   }
 
 }

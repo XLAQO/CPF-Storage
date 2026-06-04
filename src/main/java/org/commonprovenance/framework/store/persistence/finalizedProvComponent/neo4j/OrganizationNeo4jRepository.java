@@ -3,6 +3,7 @@ package org.commonprovenance.framework.store.persistence.finalizedProvComponent.
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
@@ -11,7 +12,6 @@ import org.commonprovenance.framework.store.exceptions.factory.ApplicationExcept
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.model.factory.OrganizationFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.OrganizationNodeFactory;
@@ -38,7 +38,7 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
   @Override
   public Mono<Void> save(Organization organization) {
     return Mono.just(organization)
-        .flatMap(MONO.liftEffectToMono(OrganizationNodeFactory::fromModel))
+        .flatMap(MONO.liftEffectToMono(OrganizationNodeFactory::build))
         .flatMap(client::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization has been saved into DB."))
@@ -77,7 +77,7 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
         .onErrorMap(
             IndexOutOfBoundsException.class,
             _ -> new ConflictException("There is more then one organization with identifier '" + identifier + "'!"))
-        .map(OrganizationFactory::fromPersistance)
+        .map(OrganizationFactory::build)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + identifier + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)
@@ -91,10 +91,10 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
 
   // TODO: this should be moved into Document
   @Override
-  public Mono<Void> connectOwns(Document document) {
-    return MONO.combineM(
+  public Function<Document, Mono<Void>> connectOwns(String identifier) {
+    return (Document document) -> MONO.combineM(
         MONO.<String> makeSureNotNullWithMessage("Organization identifier can not be 'null'!")
-            .apply(document.getOrganizationIdentifier()),
+            .apply(identifier),
         Mono.justOrEmpty(document.getIdentifier())
             .flatMap(MONO.<String> makeSureNotNullWithMessage("Document identifier can not be 'null'!")),
         client::createOwnsRelationship)

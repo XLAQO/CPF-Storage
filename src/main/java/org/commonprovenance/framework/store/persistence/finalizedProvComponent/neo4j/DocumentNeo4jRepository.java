@@ -9,7 +9,7 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.DocumentFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.factory.DocumentNodeFactory;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.neo4j.client.DocumentNeo4jRepositoryClient;
@@ -36,7 +36,7 @@ public class DocumentNeo4jRepository implements DocumentRepository {
   @Override
   public Mono<Void> save(Document document) {
     return Mono.just(document)
-        .flatMap(MONO.liftEffectToMono(DocumentNodeFactory::fromModelFull))
+        .flatMap(MONO.liftEffectToMono(DocumentNodeFactory::buildWithRelations))
         .flatMap(client::save)
         .then()
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Document has been saved into DB."))
@@ -57,7 +57,7 @@ public class DocumentNeo4jRepository implements DocumentRepository {
             _ -> new ConflictException("There is more then one document with identifier '" + identifier + "'!"))
         .flatMap(client::findById)
         .switchIfEmpty(Mono.error(() -> new NotFoundException("Document with identifier '" + identifier + "' has not been found!")))
-        .map(ModelFactory::toDomain)
+        .flatMap(MONO.liftEffectToMono(DocumentFactory::buildWithRelations))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Document with identifier '" + identifier + "' has been found."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)

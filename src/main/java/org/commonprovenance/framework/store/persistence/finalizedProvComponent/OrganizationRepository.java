@@ -1,5 +1,7 @@
 package org.commonprovenance.framework.store.persistence.finalizedProvComponent;
 
+import java.util.function.Function;
+
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 
@@ -12,6 +14,6 @@ public interface OrganizationRepository {
 
   Mono<Organization> findByIdentifier(String identifier);
 
-  Mono<Void> connectOwns(Document document);
+  Function<Document, Mono<Void>> connectOwns(String identifier);
 
 }

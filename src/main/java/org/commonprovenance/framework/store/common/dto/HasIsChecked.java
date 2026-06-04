@@ -16,4 +16,14 @@ public interface HasIsChecked<T extends HasIsChecked<T>> {
         .orElse(to);
   }
 
+  static <U extends HasIsChecked<U>, F> UnaryOperator<U> addIsCheckedIfPresent(F from) {
+    return (U to) -> Optional.ofNullable(from)
+        .flatMap((F v) -> (v instanceof HasIsChecked<?> has)
+            ? Optional.of(has)
+            : Optional.empty())
+        .map(HasIsChecked::getIsChecked)
+        .map(to::withIsChecked)
+        .orElse(to);
+  }
+
 }

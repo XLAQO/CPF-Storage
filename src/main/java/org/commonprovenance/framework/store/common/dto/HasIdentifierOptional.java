@@ -1,7 +1,40 @@
 package org.commonprovenance.framework.store.common.dto;
 
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
-public interface HasIdentifierOptional {
+import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
+
+public interface HasIdentifierOptional<T extends HasIdentifierOptional<T>> {
   Optional<String> getIdentifier();
+
+  default T withIdentifier(String identifier) {
+    throw new InternalApplicationException("withIdentifier is not supported for read-only type:" + this.getClass().getSimpleName());
+  }
+
+  static <T extends HasIdentifierOptional<T>, F extends HasIdentifierOptional<F>> UnaryOperator<T> addIdentifier(F from) {
+    return (T to) -> Optional.ofNullable(from)
+        .flatMap(F::getIdentifier)
+        .map(to::withIdentifier)
+        .orElse(to);
+  }
+
+  static <T extends HasIdentifierOptional<T>, F extends HasIdentifier<F>> UnaryOperator<T> addIdentifier(F from) {
+    return (T to) -> Optional.ofNullable(from)
+        .map(F::getIdentifier)
+        .map(to::withIdentifier)
+        .orElse(to);
+  }
+
+  static <T extends HasIdentifierOptional<T>, F> UnaryOperator<T> addIdentifierIfPresent(F from) {
+    return (T to) -> Optional.ofNullable(from)
+        .flatMap((F v) -> (v instanceof HasIdentifier<?> has)
+            ? Optional.of(has).map(HasIdentifier::getIdentifier)
+            : (v instanceof HasIdentifierOptional<?> maybeHas)
+                ? maybeHas.getIdentifier()
+                : Optional.empty())
+        .map(to::withIdentifier)
+        .orElse(to);
+  }
+
 }

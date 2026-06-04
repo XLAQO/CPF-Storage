@@ -2,11 +2,15 @@ package org.commonprovenance.framework.store.web.trustedParty.dto.form;
 
 import java.util.List;
 
-import org.commonprovenance.framework.store.common.dto.HasOrganizationId;
+import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
+import org.commonprovenance.framework.store.common.dto.HasIdentifier;
+import org.commonprovenance.framework.store.common.dto.HasIntermediateCertificates;
 import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 
-public class RegisterOrganizationTPFormDTO extends ValidatableDTO
-    implements HasOrganizationId<RegisterOrganizationTPFormDTO> {
+public class RegisterOrganizationTPFormDTO extends ValidatableDTO implements
+    HasIdentifier<RegisterOrganizationTPFormDTO>,
+    HasClientCertificate<RegisterOrganizationTPFormDTO>,
+    HasIntermediateCertificates<RegisterOrganizationTPFormDTO> {
   private final String organizationId;
   private final String clientCertificate;
   private final List<String> intermediateCertificates;
@@ -27,14 +31,14 @@ public class RegisterOrganizationTPFormDTO extends ValidatableDTO
   }
 
   @Override
-  public RegisterOrganizationTPFormDTO withOrganizationId(String organizationId) {
+  public RegisterOrganizationTPFormDTO withIdentifier(String identifier) {
     return new RegisterOrganizationTPFormDTO(
-        organizationId,
+        identifier,
         this.getClientCertificate(),
         this.getIntermediateCertificates());
   }
 
-  public String getOrganizationId() {
+  public String getIdentifier() {
     return organizationId;
   }
 

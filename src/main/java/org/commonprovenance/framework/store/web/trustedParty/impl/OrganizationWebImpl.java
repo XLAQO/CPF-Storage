@@ -4,15 +4,14 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Organization;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.OrganizationFactory;
 import org.commonprovenance.framework.store.web.trustedParty.OrganizationWeb;
 import org.commonprovenance.framework.store.web.trustedParty.client.ClientTrustedParty;
-import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.DTOFactory;
+import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.RegisterOrganizationFormFactory;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.OrganizationTPResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,7 @@ public class OrganizationWebImpl implements OrganizationWeb {
   public Mono<Void> create(Organization organization) {
     return MONO.combineM(
         MONO.fromEitherOptional(organization.getTrustedPartyBaseUrl()),
-        Mono.just(organization).flatMap(MONO.liftEffectToMono(DTOFactory::toForm)),
+        Mono.just(organization).flatMap(MONO.liftEffectToMono(RegisterOrganizationFormFactory::build)),
         (optTrustedPartyBaseUrl, form) -> Mono.just(form)
             .flatMap(optTrustedPartyBaseUrl
                 .map(this.client.sendCustomPostRequest("/organizations/" + organization.getIdentifier(), Void.class))
@@ -54,7 +53,7 @@ public class OrganizationWebImpl implements OrganizationWeb {
     return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetManyRequest("/organizations", OrganizationTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetManyRequest("/organizations", OrganizationTPResponseDTO.class, Map.of()))
-        .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
+        .flatMap(MONO.liftEffectToMono(OrganizationFactory::buildUnsafe))
         .doOnComplete(() -> LOGGER.trace(LOG_PREFIX + "Organizations has been fetched."))
         .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Organizations has not been fetched!\n" + throwable.getMessage()))
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(new InternalApplicationException("Organizations has not been fetched!")));
@@ -68,7 +67,7 @@ public class OrganizationWebImpl implements OrganizationWeb {
         (optTrustedPartyBaseUrl, organizationIdentifier) -> optTrustedPartyBaseUrl
             .map(this.client.sendCustomGetOneRequest("/organizations/" + organizationIdentifier, OrganizationTPResponseDTO.class, Map.of()))
             .orElse(this.client.sendGetOneRequest("/organizations/" + organizationIdentifier, OrganizationTPResponseDTO.class, Map.of())))
-        .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
+        .flatMap(MONO.liftEffectToMono(OrganizationFactory::buildUnsafe))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has been fetched."))
         .doOnError(throwable -> LOGGER.error(LOG_PREFIX + "Organization with identifier '" + organization.getIdentifier() + "' has not been fetched!\n" + throwable.getMessage()))
         .onErrorMap(ApplicationExceptionFactory.handleThrowable(

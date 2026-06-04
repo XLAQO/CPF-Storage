@@ -4,8 +4,10 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
+import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
+import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
 import org.commonprovenance.framework.store.model.utils.DocumentUtils;
 import org.commonprovenance.framework.store.persistence.metaComponent.EntityRepository;
@@ -36,9 +38,12 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
   }
 
   @Override
-  public Mono<Void> createMetaProvenanceComponentIfNotExists(Document document) {
-    return MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-        .apply(document)
+  public Mono<Void> createMetaProvenanceComponentIfNotExists(Organization organization) {
+    return MONO.<Organization> makeSureNotNullWithMessage("Organization can not be null!")
+        .apply(organization)
+        .flatMap(MONO.liftOptionalToMono(
+            Organization::getDocument,
+            _ -> new InvalidValueException("Document has not been deserialized yet!")))
         .flatMap(MONO.liftEffectToMono(DocumentUtils::getMainActivityReferenceMetaBundleId))
         .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
         .map(QualifiedName::getLocalPart)
@@ -49,15 +54,19 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
   }
 
   @Override
-  public Mono<Void> addBundleVersionIntoMetaProvenanceComponent(Document document) {
+  public Mono<Void> addBundleVersionIntoMetaProvenanceComponent(Organization organization) {
     return MONO.combineM(
-        MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-            .apply(document)
+        Mono.just(organization)
+            .flatMap(MONO.liftOptionalToMono(
+                Organization::getDocument,
+                _ -> new InvalidValueException("Document has not been deserialized yet!")))
             .flatMap(MONO.liftEffectToMono(DocumentUtils::getMainActivityReferenceMetaBundleId))
             .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
             .map(QualifiedName::getLocalPart),
-        MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-            .apply(document)
+        Mono.just(organization)
+            .flatMap(MONO.liftOptionalToMono(
+                Organization::getDocument,
+                _ -> new InvalidValueException("Document has not been deserialized yet!")))
             .flatMap(MONO.liftEffectToMono(DocumentUtils::getDocumentIdentifier))
             .flatMap(MONO.makeSureNotNullWithMessage("Bundle identifier can not be null!")),
         (metaBundleIdentifier, bundleIdentifier) -> metaBundleRepository.getLastVersionNo(metaBundleIdentifier)
@@ -73,16 +82,19 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
   }
 
   @Override
-  public Mono<Void> addTokenIntoMetaProvenanceComponent(Document document) {
-
+  public Mono<Void> addTokenIntoMetaProvenanceComponent(Organization organization) {
     return MONO.combineM(
-        MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-            .apply(document)
+        Mono.just(organization)
+            .flatMap(MONO.liftOptionalToMono(
+                Organization::getDocument,
+                _ -> new InvalidValueException("Document has not been deserialized yet!")))
             .flatMap(MONO.liftEffectToMono(DocumentUtils::getMainActivityReferenceMetaBundleId))
             .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
             .map(QualifiedName::getLocalPart),
-        MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-            .apply(document)
+        Mono.just(organization)
+            .flatMap(MONO.liftOptionalToMono(
+                Organization::getDocument,
+                _ -> new InvalidValueException("Document has not been deserialized yet!")))
             .flatMap(MONO.liftOptionalToMono(Document::getToken, "Token can not be null!"))
             .map(Token::getJwt)
             .flatMap(MONO.makeSureNotNullWithMessage(

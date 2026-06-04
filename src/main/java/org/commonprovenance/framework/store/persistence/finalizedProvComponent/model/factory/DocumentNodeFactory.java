@@ -26,16 +26,23 @@ public class DocumentNodeFactory {
             HasFormatSerialized.addFormat(document)));
   }
 
-  public static Either<ApplicationException, DocumentNode> fromModel(Document document) {
+  public static Either<ApplicationException, DocumentNode> build(Document document) {
     return Either.<ApplicationException, Document> right(document)
         .map(DocumentNodeFactory::mapper)
         .flatMap(EITHER::validateDTO);
   }
 
-  public static Either<ApplicationException, DocumentNode> fromModelFull(Document document) {
+  public static Either<ApplicationException, DocumentNode> buildWithRelations(Document document) {
     return Either.<ApplicationException, Document> right(document)
         .map(DocumentNodeFactory::mapper)
         .flatMap(HasTokenNodeList.addToken(document))
+        .flatMap(EITHER::validateDTO);
+  }
+
+  public static Either<ApplicationException, DocumentNode> buildWithFullRelations(Document document) {
+    return Either.<ApplicationException, Document> right(document)
+        .map(DocumentNodeFactory::mapper)
+        .flatMap(HasTokenNodeList.addTokenFull(document))
         .flatMap(EITHER::validateDTO);
   }
 

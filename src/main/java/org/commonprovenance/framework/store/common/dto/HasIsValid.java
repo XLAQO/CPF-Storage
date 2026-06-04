@@ -16,4 +16,13 @@ public interface HasIsValid<T extends HasIsValid<T>> {
         .orElse(to);
   }
 
+  static <U extends HasIsValid<U>, F> UnaryOperator<U> addIsValidIfPresent(F from) {
+    return (U to) -> Optional.ofNullable(from)
+        .flatMap((F v) -> (v instanceof HasIsValid<?> has)
+            ? Optional.of(has)
+            : Optional.empty())
+        .map(HasIsValid::getIsValid)
+        .map(to::withIsValid)
+        .orElse(to);
+  }
 }

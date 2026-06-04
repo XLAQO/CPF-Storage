@@ -21,13 +21,13 @@ public class TokenNodeFactory {
         List.of(HasJwtToken.addJwt(token)));
   }
 
-  public static Either<ApplicationException, TokenNode> fromModel(Token token) {
+  public static Either<ApplicationException, TokenNode> build(Token token) {
     return Either.<ApplicationException, Token> right(token)
         .map(TokenNodeFactory::mapper)
         .flatMap(EITHER::validateDTO);
   }
 
-  public static Either<ApplicationException, TokenNode> fromModelFull(Token token) {
+  public static Either<ApplicationException, TokenNode> buildWithRelations(Token token) {
     return Either.<ApplicationException, Token> right(token)
         .map(TokenNodeFactory::mapper)
         .flatMap(HasTrustedPartyNodeList.addTrustedParty(token))

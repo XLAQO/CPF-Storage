@@ -3,13 +3,22 @@ package org.commonprovenance.framework.store.controller.dto.form;
 import java.util.List;
 import java.util.Optional;
 
+import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
+import org.commonprovenance.framework.store.common.dto.HasIdentifier;
+import org.commonprovenance.framework.store.common.dto.HasIntermediateCertificates;
+import org.commonprovenance.framework.store.common.dto.HasUrlOptional;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 @Schema(name = "OrganizationForm", description = "Payload used to create or update an organization")
-public class OrganizationFormDTO {
+public class OrganizationFormDTO implements
+    HasIdentifier<OrganizationFormDTO>,
+    HasClientCertificate<OrganizationFormDTO>,
+    HasIntermediateCertificates<OrganizationFormDTO>,
+    HasUrlOptional<OrganizationFormDTO> {
   @Schema(description = "Organization identifier", example = "853226ba-9d56-4129-b51a-3b534f88957d", requiredMode = Schema.RequiredMode.REQUIRED)
   @NotBlank(message = "Organization identifier should not be null or empty.")
   private final String identifier;
@@ -66,7 +75,7 @@ public class OrganizationFormDTO {
     return intermediateCertificates;
   }
 
-  public Optional<String> getTrustedPartyUri() {
+  public Optional<String> getUrl() {
     return Optional.ofNullable(trustedPartyUri);
   }
 

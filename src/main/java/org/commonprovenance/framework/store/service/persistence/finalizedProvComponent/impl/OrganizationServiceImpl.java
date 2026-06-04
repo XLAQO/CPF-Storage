@@ -5,12 +5,10 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
-import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
-import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.model.utils.OrganizationUtils;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
+import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TokenRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.springframework.stereotype.Service;
@@ -23,14 +21,17 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final TrustedPartyRepository trustedPartyRepository;
   private final DocumentRepository documentRepository;
+  private final TokenRepository tokenRepository;
 
   public OrganizationServiceImpl(
       OrganizationRepository organizationRepository,
       TrustedPartyRepository trustedPartyRepository,
-      DocumentRepository documentRepository) {
+      DocumentRepository documentRepository,
+      TokenRepository tokenRepository) {
     this.organizationRepository = organizationRepository;
     this.trustedPartyRepository = trustedPartyRepository;
     this.documentRepository = documentRepository;
+    this.tokenRepository = tokenRepository;
   }
 
   @Override
@@ -104,17 +105,15 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Mono<Void> linkOwnedDocument(Document document) {
-    return this.organizationRepository.connectOwns(document);
-  }
-
-  @Override
   public Mono<Void> storeDocument(Organization organization) {
     return Mono.just(organization)
-            .flatMap(MONO.liftOptionalToMono(
-                Organization::getCurrentDocument,
-                _ -> new InvalidValueException("Document has not been deserialized yet!")))
-                .flatMap(this.documentRepository::save)
+        .flatMap(MONO.liftOptionalToMono(
+            Organization::getDocument,
+            _ -> new InvalidValueException("Document has not been deserialized yet!")))
+        .delayUntil(this.documentRepository::save)
+        .delayUntil(this.organizationRepository.connectOwns(organization.getIdentifier()))
+        .delayUntil(this.tokenRepository.connectWasIssuedBy(organization.getTrustedParty()))
+        .then();
 
   }
 

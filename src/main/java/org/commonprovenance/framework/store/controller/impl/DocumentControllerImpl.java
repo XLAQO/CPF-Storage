@@ -15,14 +15,14 @@ import org.commonprovenance.framework.store.controller.dto.error.NotFoundDTO;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
 import org.commonprovenance.framework.store.controller.dto.response.DocumentResponseDTO;
 import org.commonprovenance.framework.store.controller.dto.response.TokenResponseDTO;
-import org.commonprovenance.framework.store.controller.dto.response.factory.DTOFactory;
+import org.commonprovenance.framework.store.controller.facade.DocumentFacade;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
+import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
 import org.commonprovenance.framework.store.model.utils.DocumentUtils;
 import org.commonprovenance.framework.store.model.utils.OrganizationUtils;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
@@ -61,10 +61,12 @@ import reactor.core.publisher.Mono;
 
 @Validated
 @RestController()
-@RequestMapping(path = "/api/v1/documents", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/api/v1/organizations/{organizationIdentifier}/documents", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Documents", description = "Operations for storing and reading provenance documents")
 public class DocumentControllerImpl implements DocumentController {
   private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationExceptionHandler.class);
+
+  private final DocumentFacade documentFacade;
 
   private final DocumentService documentService;
   private final OrganizationService organizationService;
@@ -81,6 +83,7 @@ public class DocumentControllerImpl implements DocumentController {
   private final AppConfiguration configuration;
 
   public DocumentControllerImpl(
+      DocumentFacade documentFacade,
       DocumentService documentService,
       OrganizationService organizationService,
       TokenService tokenService,
@@ -91,6 +94,8 @@ public class DocumentControllerImpl implements DocumentController {
       ICpmFactory cpmFactory,
       ICpmProvFactory cpmProvFactory,
       AppConfiguration configuration) {
+    this.documentFacade = documentFacade;
+
     this.documentService = documentService;
     this.organizationService = organizationService;
     this.metaComponentService = metaComponentService;
@@ -106,7 +111,7 @@ public class DocumentControllerImpl implements DocumentController {
   }
 
   @ResponseStatus(HttpStatus.CREATED)
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(path = "/", consumes = MediaType.APPLICATION_JSON_VALUE)
   @NotNull
   @Operation(summary = "Create a provenance document")
   @ApiResponses({
@@ -115,170 +120,116 @@ public class DocumentControllerImpl implements DocumentController {
       @ApiResponse(responseCode = "409", description = "Conflict with existing data", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = BadRequestDTO.class))),
       @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
   })
-  public Mono<TokenResponseDTO> createProvDocument(@RequestBody DocumentFormDTO body) {
-    // return ModelFactory.toDomain(body)
-        // .delayUntil((Document document) -> Mono.just(document)
-            // validate Organization and TrustedParty first
-            // .map(DocumentUtils::buildOrganization)
-            // .delayUntil(this.organizationService::checkOrganizationExists)
-            // .flatMap(this.organizationService::getOrganization)
-            // .delayUntil(MONO.liftEffectToMono(OrganizationUtils::validateTrustedParty))
-            // .onErrorMap(ApplicationExceptionFactory.to(ConflictException::new))
-            // --------------------------
-            // validate document signature
-            // .delayUntil(trustedPartyWebService.verifySignature(document)))
-        // .doOnNext(_ -> LOGGER.debug("Request verified"))
+  public Mono<TokenResponseDTO> createProvDocument(@PathVariable String organizationIdentifier, @RequestBody DocumentFormDTO body) {
+    return this.documentFacade.createProvDocument(organizationIdentifier, body);
 
-        // --------------------------
-        // deserialize document into CpmDocument class
-        // .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
-        // .doOnNext(_ -> LOGGER.debug("Document deserialized"))
-
-        // .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
-        // --------------------------
-        // get document id from deserialized document - has to be bundle identifier local part
-        // .flatMap(MONO.liftEffectToMono(DocumentUtils::setDocumentIdentifier))
-        // --------------------------
-        // check document does not exists yet
-        // .delayUntil(this.documentService::checkDocumentDoesNotExists)
-        // --------------------------
-        // check connectors
-        // .delayUntil(this.documentService::checkBackwardConnectorsResolvable)
-        // .delayUntil(this.documentService::checkSpecForwardConnectorsResolvable)
-        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkSpecForwardConnetorsAttrs))
-        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkBackwardConnetorsAttrs))
-        // .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkForwardConnetorsAttrs))
-        // .doOnNext(_ -> LOGGER.debug("Request validated"))
-
-        // TODO: check hashes in connectors
-        // TODO: check cpm constraints
-        // TODO: check provenance constraints
-        // issue token
-        .flatMap((Document document) -> Mono.just(document)
-            .flatMap(this.trustedPartyWebService::issueGraphToken)
-            .delayUntil(this.tokenService::storeToken)
-            .map(document::withToken))
-        .doOnNext(_ -> LOGGER.debug("Token stored"))
-
-        .delayUntil(this.metaComponentService::createMetaProvenanceComponentIfNotExists)
-        .delayUntil(this.metaComponentService::addBundleVersionIntoMetaProvenanceComponent)
-        .delayUntil(this.metaComponentService::addTokenIntoMetaProvenanceComponent)
-
-        .doOnNext(_ -> LOGGER.debug("MetaComponent stored"))
-
-        .delayUntil(this.organizationService::linkOwnedDocument)
-        .map(Document::getToken)
-        .flatMap(Mono::justOrEmpty)
-        .flatMap(DTOFactory::toTokenDTO)
-        .onErrorMap(error -> {
-          if (error instanceof ApplicationException) {
-            return error;
-          }
-
-          return new InternalApplicationException("Document creation failed", error);
-        })
-        .doOnNext(_ -> LOGGER.debug("Finito.."));
   }
 
-  @NotNull
-  @GetMapping("/{identifier}")
-  @Operation(summary = "Get provenance document by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Document fetched"),
-      @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NotFoundDTO.class))),
-      @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
-  })
-  public Mono<DocumentResponseDTO> getFinalizedProvDocumentByIdentifier(@PathVariable String identifier) {
-    return Mono.justOrEmpty(identifier)
-        .flatMap(this.tokenService::getByDocumentIdentifier)
-        .flatMap(DTOFactory::toDocumentDTO);
-  }
+  // @NotNull
+  // @GetMapping("/{identifier}")
+  // @Operation(summary = "Get provenance document by identifier")
+  // @ApiResponses({
+  // @ApiResponse(responseCode = "200", description = "Document fetched"),
+  // @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // NotFoundDTO.class))),
+  // @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // InternalServerErrorDTO.class)))
+  // })
+  // public Mono<DocumentResponseDTO> getFinalizedProvDocumentByIdentifier(@PathVariable String identifier) {
+  // return Mono.justOrEmpty(identifier)
+  // .flatMap(this.tokenService::getByDocumentIdentifier)
+  // .flatMap(DTOFactory::toDocumentDTO);
+  // }
 
-  @NotNull
-  @GetMapping("/{identifier}/domain-specific")
-  @Operation(summary = "Get domain specific provenance document by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Document fetched"),
-      @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NotFoundDTO.class))),
-      @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
-  })
-  public Mono<DocumentResponseDTO> getDomainProvDocumentByIdentifier(@PathVariable String identifier) {
-    return Mono.justOrEmpty(identifier)
-        .flatMap(this.documentService::getDocumentByIdentifier)
-        .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
-        .flatMap(document -> Mono.justOrEmpty(document.getCpmDocument())
-            .switchIfEmpty(Mono.error(new NotFoundException(
-                "Finalized provenance document for identifier '" + identifier + "' can not be deserialized.")))
-            .map(cpm -> new CpmDocument(
-                cpm.getBundleId(),
-                Collections.emptyList(),
-                cpm.getDomainSpecificPart(),
-                Collections.emptyList(),
-                this.provFactory,
-                this.cpmProvFactory,
-                this.cpmFactory))
-            .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
-            .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
-            .flatMap(MONO.liftEffectToMono(cpmStr -> document
-                .withGraph(cpmStr)
-                .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
-            .flatMap(provDoc -> Mono.justOrEmpty(provDoc.getIdentifier())
-                .flatMap(this.documentService::getOrganizationIdentifierByIdentifier)
-                .map(provDoc::withOrganizationIdentifier))
-            .flatMap(provDoc -> Mono.justOrEmpty(provDoc)
-                .map(Document::getOrganizationIdentifier)
-                .flatMap(this.trustedPartyService::getTrustedPartyUrlByOrganizationIdentifier)
-                .map(Optional::ofNullable)
-                .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
-                .map(token -> token.withDocument(provDoc)))
-            .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
-                .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
-                .map(token::withTrustedParty)))
-        .flatMap(DTOFactory::toDocumentDTO);
-  }
+  // @NotNull
+  // @GetMapping("/{identifier}/domain-specific")
+  // @Operation(summary = "Get domain specific provenance document by identifier")
+  // @ApiResponses({
+  // @ApiResponse(responseCode = "200", description = "Document fetched"),
+  // @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // NotFoundDTO.class))),
+  // @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // InternalServerErrorDTO.class)))
+  // })
+  // public Mono<DocumentResponseDTO> getDomainProvDocumentByIdentifier(@PathVariable String identifier) {
+  // return Mono.justOrEmpty(identifier)
+  // .flatMap(this.documentService::getDocumentByIdentifier)
+  // .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
+  // .flatMap(document -> Mono.justOrEmpty(document.getCpmDocument())
+  // .switchIfEmpty(Mono.error(new NotFoundException(
+  // "Finalized provenance document for identifier '" + identifier + "' can not be deserialized.")))
+  // .map(cpm -> new CpmDocument(
+  // cpm.getBundleId(),
+  // Collections.emptyList(),
+  // cpm.getDomainSpecificPart(),
+  // Collections.emptyList(),
+  // this.provFactory,
+  // this.cpmProvFactory,
+  // this.cpmFactory))
+  // .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+  // .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
+  // .flatMap(MONO.liftEffectToMono(cpmStr -> document
+  // .withGraph(cpmStr)
+  // .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
+  // .flatMap(provDoc -> Mono.justOrEmpty(provDoc.getIdentifier())
+  // .flatMap(this.documentService::getOrganizationIdentifierByIdentifier)
+  // .map(provDoc::withOrganizationIdentifier))
+  // .flatMap(provDoc -> Mono.justOrEmpty(provDoc)
+  // .map(Document::getOrganizationIdentifier)
+  // .flatMap(this.trustedPartyService::getTrustedPartyUrlByOrganizationIdentifier)
+  // .map(Optional::ofNullable)
+  // .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
+  // .map(token -> token.withDocument(provDoc)))
+  // .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
+  // .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
+  // .map(token::withTrustedParty)))
+  // .flatMap(DTOFactory::toDocumentDTO);
+  // }
 
-  @NotNull
-  @GetMapping("/{identifier}/backbone")
-  @Operation(summary = "Get backbone provenance document by identifier")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "Document fetched"),
-      @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NotFoundDTO.class))),
-      @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class)))
-  })
-  public Mono<DocumentResponseDTO> getBackboneProvDocumentByIdentifier(@PathVariable String identifier) {
-    return Mono.justOrEmpty(identifier)
-        .flatMap(this.documentService::getDocumentByIdentifier)
-        .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
-        .flatMap(document -> Mono.justOrEmpty(document.getCpmDocument())
-            .switchIfEmpty(Mono.error(new NotFoundException(
-                "Finalized provenance document for identifier '" + identifier + "' can not be deserialized.")))
-            .map(cpm -> new CpmDocument(
-                cpm.getBundleId(),
-                cpm.getTraversalInformationPart(),
-                Collections.emptyList(),
-                Collections.emptyList(),
-                this.provFactory,
-                this.cpmProvFactory,
-                this.cpmFactory))
-            .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
-            .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
-            .flatMap(MONO.liftEffectToMono(cpmStr -> document
-                .withGraph(cpmStr)
-                .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
-            .flatMap(provDoc -> Mono.justOrEmpty(provDoc.getIdentifier())
-                .flatMap(this.documentService::getOrganizationIdentifierByIdentifier)
-                .map(provDoc::withOrganizationIdentifier))
-            .flatMap(provDoc -> Mono.justOrEmpty(provDoc)
-                .map(Document::getOrganizationIdentifier)
-                .flatMap(this.trustedPartyService::getTrustedPartyUrlByOrganizationIdentifier)
-                .map(Optional::ofNullable)
-                .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
-                .map(token -> token.withDocument(provDoc)))
-            .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
-                .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
-                .map(token::withTrustedParty)))
-        .flatMap(DTOFactory::toDocumentDTO);
-  }
+  // @NotNull
+  // @GetMapping("/{identifier}/backbone")
+  // @Operation(summary = "Get backbone provenance document by identifier")
+  // @ApiResponses({
+  // @ApiResponse(responseCode = "200", description = "Document fetched"),
+  // @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // NotFoundDTO.class))),
+  // @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation =
+  // InternalServerErrorDTO.class)))
+  // })
+  // public Mono<DocumentResponseDTO> getBackboneProvDocumentByIdentifier(@PathVariable String identifier) {
+  // return Mono.justOrEmpty(identifier)
+  // .flatMap(this.documentService::getDocumentByIdentifier)
+  // .flatMap(MONO.liftEffectToMono(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory)))
+  // .flatMap(document -> Mono.justOrEmpty(document.getCpmDocument())
+  // .switchIfEmpty(Mono.error(new NotFoundException(
+  // "Finalized provenance document for identifier '" + identifier + "' can not be deserialized.")))
+  // .map(cpm -> new CpmDocument(
+  // cpm.getBundleId(),
+  // cpm.getTraversalInformationPart(),
+  // Collections.emptyList(),
+  // Collections.emptyList(),
+  // this.provFactory,
+  // this.cpmProvFactory,
+  // this.cpmFactory))
+  // .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+  // .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
+  // .flatMap(MONO.liftEffectToMono(cpmStr -> document
+  // .withGraph(cpmStr)
+  // .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
+  // .flatMap(provDoc -> Mono.justOrEmpty(provDoc.getIdentifier())
+  // .flatMap(this.documentService::getOrganizationIdentifierByIdentifier)
+  // .map(provDoc::withOrganizationIdentifier))
+  // .flatMap(provDoc -> Mono.justOrEmpty(provDoc)
+  // .map(Document::getOrganizationIdentifier)
+  // .flatMap(this.trustedPartyService::getTrustedPartyUrlByOrganizationIdentifier)
+  // .map(Optional::ofNullable)
+  // .flatMap(optUrl -> this.trustedPartyWebService.issueDomainSpecificGraphToken(optUrl).apply(provDoc))
+  // .map(token -> token.withDocument(provDoc)))
+  // .flatMap(token -> Mono.justOrEmpty(token.getToken().getOrganizationIdentifier())
+  // .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
+  // .map(token::withTrustedParty)))
+  // .flatMap(DTOFactory::toDocumentDTO);
+  // }
 
   @Override
   @NotNull
@@ -289,11 +240,9 @@ public class DocumentControllerImpl implements DocumentController {
       @ApiResponse(responseCode = "404", description = "Document does not exist"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public Mono<Void> exists(@PathVariable String identifier) {
-    return Mono.justOrEmpty(identifier)
-        .flatMap(MONO.makeSureAsync(
-            this.documentService::existsByIdentifier,
-            id -> new NotFoundException("Document with identifier '" + id + "' does not exist!")))
-        .then();
+  public Mono<Void> exists(@PathVariable String organizationIdentifier, @PathVariable String identifier) {
+    return Mono.just(identifier)
+        .flatMap(MONO.makeSureNotNull(new BadRequestException("Path variable document identifier can not be null!")))
+        .flatMap(this.documentFacade::exists);
   }
 }

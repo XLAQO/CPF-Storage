@@ -8,10 +8,8 @@ import java.util.function.Function;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
-import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
-import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.GraphType;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
@@ -108,26 +106,13 @@ public class TrustedPartyWebServiceImpl implements TrustedPartyWebService {
   }
 
   @Override
-  public Mono<Token> issueGraphToken(Document document) {
-    return MONO.<Document> makeSureNotNullWithMessage("Document can not be null!")
-        .apply(document)
-        .map(Document::getOrganizationIdentifier)
-        .flatMap(this.trustedPartyService::getTrustedPartyByOrganizationIdentifier)
-        .flatMap(trustedParty -> this.issueBackboneGraphToken(trustedParty.getUrlIfNotDefault())
-            .apply(document)
-            .map(token -> token
-                .withGraph(document)
-                .withDocument(trustedParty)));
+  public Function<Organization, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl) {
+    return this.trustedPartyWeb.issueGraphToken(GraphType.DOMAIN_SPECIFIC);
   }
 
   @Override
-  public Function<Document, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl) {
-    return this.trustedPartyWeb.issueGraphToken(trustedPartyUrl, GraphType.DOMAIN_SPECIFIC);
-  }
-
-  @Override
-  public Function<Document, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl) {
-    return this.trustedPartyWeb.issueGraphToken(trustedPartyUrl, GraphType.BACKBONE);
+  public Function<Organization, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl) {
+    return this.trustedPartyWeb.issueGraphToken(GraphType.BACKBONE);
   }
 
 }

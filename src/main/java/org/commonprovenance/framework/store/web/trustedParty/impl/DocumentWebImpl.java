@@ -1,7 +1,5 @@
 package org.commonprovenance.framework.store.web.trustedParty.impl;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -10,7 +8,7 @@ import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.DocumentFactory;
 import org.commonprovenance.framework.store.web.trustedParty.DocumentWeb;
 import org.commonprovenance.framework.store.web.trustedParty.client.ClientTrustedParty;
 import org.commonprovenance.framework.store.web.trustedParty.dto.response.DocumentTPResponseDTO;
@@ -43,7 +41,7 @@ public class DocumentWebImpl implements DocumentWeb {
     return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest(uri, DocumentTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest(uri, DocumentTPResponseDTO.class, Map.of()))
-        .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
+        .map(DocumentFactory::build)
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Document with identifier '" + bundleIdentifier.getUri() + "' has been fetched."))
         .doOnError(throwable -> {
           if (throwable instanceof NotFoundException notFound)

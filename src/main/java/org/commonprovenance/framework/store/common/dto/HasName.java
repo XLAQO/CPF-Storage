@@ -15,4 +15,14 @@ public interface HasName<T extends HasName<T>> {
         .map(to::withName)
         .orElse(to);
   }
+
+  static <U extends HasName<U>, F> UnaryOperator<U> addNameIfPresent(F from) {
+    return (U to) -> Optional.ofNullable(from)
+        .flatMap((F v) -> (v instanceof HasName<?> has)
+            ? Optional.of(has)
+            : Optional.empty())
+        .map(HasName::getName)
+        .map(to::withName)
+        .orElse(to);
+  }
 }

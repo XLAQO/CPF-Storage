@@ -11,6 +11,7 @@ import org.commonprovenance.framework.store.common.dto.HasSignature;
 import org.commonprovenance.framework.store.common.dto.HasTokenOptional;
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
+import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
@@ -25,11 +26,11 @@ import cz.muni.fi.cpm.model.ICpmProvFactory;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 
-public class Document implements
-    HasIdentifierOptional,
+public class Document extends ValidatableDTO implements
+    HasIdentifierOptional<Document>,
     HasGraph<Document>,
     HasFormat<Document>,
-    HasSignature<Document>,
+    HasSignature<Document>, // TODO: Remove signature from here
     HasTokenOptional<Document> {
   private final String graph;
   private final Format format;
@@ -61,6 +62,15 @@ public class Document implements
 
     this.cpmDocument = Optional.ofNullable(cpmDocument);
     this.token = Optional.ofNullable(token);
+  }
+
+  public Document() {
+    this.graph = null;
+    this.format = null;
+    this.signature = null;
+
+    this.cpmDocument = Optional.empty();
+    this.token = Optional.empty();
   }
 
   public Document withGraph(String graph) {

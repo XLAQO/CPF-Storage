@@ -31,7 +31,7 @@ public class TrustedPartyNodeFactory {
             HasIsDefault.addIsDefault(trustedParty)));
   }
 
-  public static Either<ApplicationException, TrustedPartyNode> fromModel(TrustedParty trustedParty) {
+  public static Either<ApplicationException, TrustedPartyNode> build(TrustedParty trustedParty) {
     return Either.<ApplicationException, TrustedParty> right(trustedParty)
         .map(TrustedPartyNodeFactory::mapper)
         .flatMap(EITHER::validateDTO);

@@ -13,7 +13,8 @@ import org.commonprovenance.framework.store.model.GraphType;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
 import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.model.factory.ModelFactory;
+import org.commonprovenance.framework.store.model.factory.TokenFactory;
+import org.commonprovenance.framework.store.model.factory.TrustedPartyFactory;
 import org.commonprovenance.framework.store.web.trustedParty.TrustedPartyWeb;
 import org.commonprovenance.framework.store.web.trustedParty.client.ClientTrustedParty;
 import org.commonprovenance.framework.store.web.trustedParty.dto.form.factory.IssueTokenFormFactory;
@@ -44,7 +45,7 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
     return optTrustedPartyBaseUrl
         .map(this.client.sendCustomGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
         .orElse(this.client.sendGetOneRequest("/info", TrustedPartyTPResponseDTO.class, Map.of()))
-        .flatMap(MONO.liftEffectToMono(ModelFactory.toDomain(
+        .flatMap(MONO.liftEffectToMono(TrustedPartyFactory.buildUnsafe(
             this.getTrustedPartyUrl(optTrustedPartyBaseUrl),
             optTrustedPartyBaseUrl.isEmpty())))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Trusted Party info object has been fetched from url: '" + this.getTrustedPartyUrl(optTrustedPartyBaseUrl) + "'."))
@@ -66,7 +67,7 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
             .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
             .orElse(this.client.sendPostRequest("/issueToken", TokenTPResponseDTO.class)))
-        .flatMap(MONO.liftEffectToMono(ModelFactory::toDomain))
+        .flatMap(MONO.liftEffectToMono(TokenFactory::build))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'."))
         .doOnError(throwable -> LOGGER.error(
             LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!\n" + throwable.getMessage()))
@@ -76,7 +77,7 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
 
   @Override
   public Mono<Boolean> verifySignature(Organization organization) {
-    return MONO.fromEither(VerifySignatureFormFactory.fromModel(organization))
+    return MONO.fromEither(VerifySignatureFormFactory.build(organization))
         .flatMap(organization.getTrustedParty()
             .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/verifySignature", Void.class))

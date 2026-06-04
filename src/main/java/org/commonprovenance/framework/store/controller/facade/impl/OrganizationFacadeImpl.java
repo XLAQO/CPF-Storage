@@ -4,7 +4,6 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 
 import org.commonprovenance.framework.store.controller.dto.form.OrganizationFormDTO;
 import org.commonprovenance.framework.store.controller.dto.response.OrganizationResponseDTO;
-import org.commonprovenance.framework.store.controller.dto.response.factory.DTOFactory;
 import org.commonprovenance.framework.store.controller.dto.response.factory.OrganizationResponseFactory;
 import org.commonprovenance.framework.store.controller.facade.OrganizationFacade;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
@@ -41,8 +40,8 @@ public class OrganizationFacadeImpl implements OrganizationFacade {
   public Mono<OrganizationResponseDTO> register(OrganizationFormDTO body) {
     return Mono.just(body)
         .delayUntil(MONO.makeSureNotNull(new BadRequestException("Request body can not be null or empty!")))
-        .map(OrganizationFactory::fromFormDTO)
-        .flatMap(this.trustedPartyWebService.setTrustedPartyByBaseUrl(body.getTrustedPartyUri()))
+        .map(OrganizationFactory::build)
+        .flatMap(this.trustedPartyWebService.setTrustedPartyByBaseUrl(body.getUrl()))
         .delayUntil(MONO.makeSureAsync(
             this.trustedPartyService::isTrustedPartyValid,
             organization -> organization.getTrustedParty().flatMap(TrustedParty::getUrlIfNotDefault)
@@ -51,31 +50,32 @@ public class OrganizationFacadeImpl implements OrganizationFacade {
         // TODO: Rollback if Organization registration fail on NRO side.
         .delayUntil(this.organizationService::storeOrganization)
         .delayUntil(this.trustedPartyWebService::registerOrganization)
-        .map(OrganizationResponseFactory::fromModel);
+        .map(OrganizationResponseFactory::build);
   }
 
   @Override
   public Mono<OrganizationResponseDTO> update(OrganizationFormDTO body) {
     return Mono.just(body)
         .delayUntil(MONO.makeSureNotNull(new BadRequestException("Request body can not be null or empty!")))
-        .map(OrganizationFactory::fromFormDTO)
-        .flatMap(this.trustedPartyWebService.setTrustedPartyByBaseUrl(body.getTrustedPartyUri()))
+        .map(OrganizationFactory::build)
+        .flatMap(this.trustedPartyWebService.setTrustedPartyByBaseUrl(body.getUrl()))
         .delayUntil(MONO.makeSureAsync(
             this.trustedPartyService::isTrustedPartyValid,
             organization -> organization.getTrustedParty().flatMap(TrustedParty::getUrlIfNotDefault)
-                .<ApplicationException> map(baseUrl -> new ConflictException("TrustedParty at '" + baseUrl + "' is not registered in CPF-Store!"))
-                .orElse(new InternalApplicationException("Default TrustedParty is not registered in CPF-Store!"))))
+                .<ApplicationException> map(
+                    baseUrl -> new ConflictException("TrustedParty at '" + baseUrl + "' is not registered in CPF-Store, or has not been considered as valid yet!"))
+                .orElse(new InternalApplicationException("Default TrustedParty is not registered in CPF-Store, or has not been considered as valid!"))))
         // TODO: Rollback if Organization update fail on NRO side.
         .delayUntil(this.organizationService::updateOrganization)
         .delayUntil(this.trustedPartyWebService::updateOrganization)
-        .map(OrganizationResponseFactory::fromModel);
+        .map(OrganizationResponseFactory::build);
   }
 
   @Override
-  public Mono<OrganizationResponseDTO> getOrganizationByIdentifier(String identifier) {
-    return Mono.just(identifier)
+  public Mono<OrganizationResponseDTO> getOrganizationByIdentifier(String organizationIdentifier) {
+    return Mono.just(organizationIdentifier)
         .delayUntil(MONO.makeSureNotNull(new BadRequestException("Request path variable 'identifier' can not be null or empty!")))
         .flatMap(this.organizationService::getOrganizationByIdentifier)
-        .map(DTOFactory::toDTO);
+        .map(OrganizationResponseFactory::build);
   }
 }

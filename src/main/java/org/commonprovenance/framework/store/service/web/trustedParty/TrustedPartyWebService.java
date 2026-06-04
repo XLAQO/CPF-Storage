@@ -3,7 +3,6 @@ package org.commonprovenance.framework.store.service.web.trustedParty;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.Token;
 
@@ -24,9 +23,7 @@ public interface TrustedPartyWebService {
 
   Mono<Organization> issueGraphToken(Organization organization);
 
-  Mono<Token> issueGraphToken(Document document);
+  Function<Organization, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl);
 
-  Function<Document, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl);
-
-  Function<Document, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl);
+  Function<Organization, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl);
 }
