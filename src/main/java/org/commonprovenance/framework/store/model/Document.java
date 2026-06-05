@@ -30,11 +30,9 @@ public class Document extends ValidatableDTO implements
     HasIdentifierOptional<Document>,
     HasGraph<Document>,
     HasFormat<Document>,
-    HasSignature<Document>, // TODO: Remove signature from here
     HasTokenOptional<Document> {
   private final String graph;
   private final Format format;
-  private final String signature;
 
   private final Optional<CpmDocument> cpmDocument;
   private final Optional<Token> token;
@@ -45,7 +43,6 @@ public class Document extends ValidatableDTO implements
       String signature) {
     this.graph = graph;
     this.format = format;
-    this.signature = signature;
     this.cpmDocument = Optional.empty();
     this.token = Optional.empty();
   }
@@ -53,12 +50,10 @@ public class Document extends ValidatableDTO implements
   public Document(
       String graph,
       Format format,
-      String signature,
       CpmDocument cpmDocument,
       Token token) {
     this.graph = graph;
     this.format = format;
-    this.signature = signature;
 
     this.cpmDocument = Optional.ofNullable(cpmDocument);
     this.token = Optional.ofNullable(token);
@@ -67,7 +62,6 @@ public class Document extends ValidatableDTO implements
   public Document() {
     this.graph = null;
     this.format = null;
-    this.signature = null;
 
     this.cpmDocument = Optional.empty();
     this.token = Optional.empty();
@@ -77,7 +71,6 @@ public class Document extends ValidatableDTO implements
     return new Document(
         graph,
         this.getFormat(),
-        this.getSignature(),
         this.getCpmDocument().orElse(null),
         this.getToken().orElse(null));
   }
@@ -86,7 +79,6 @@ public class Document extends ValidatableDTO implements
     return new Document(
         this.getGraph(),
         format,
-        this.getSignature(),
         this.getCpmDocument().orElse(null),
         this.getToken().orElse(null));
   }
@@ -107,7 +99,6 @@ public class Document extends ValidatableDTO implements
         .map((CpmDocument cpmDocument) -> new Document(
             this.getGraph(),
             this.getFormat(),
-            this.getSignature(),
             cpmDocument,
             this.getToken().orElse(null)))
         .mapLeft(ApplicationExceptionFactory.build(InternalApplicationException::new, "Graf has not been deserialized"));
@@ -117,18 +108,8 @@ public class Document extends ValidatableDTO implements
     return new Document(
         this.getGraph(),
         this.getFormat(),
-        this.getSignature(),
         this.getCpmDocument().orElse(null),
         token);
-  }
-
-  public Document withSignature(String signature) {
-    return new Document(
-        this.getGraph(),
-        this.getFormat(),
-        signature,
-        this.getCpmDocument().orElse(null),
-        this.getToken().orElse(null));
   }
 
   private Function1<org.openprovenance.prov.model.Document, CpmDocument> cpmFactory(
@@ -148,10 +129,6 @@ public class Document extends ValidatableDTO implements
     return format;
   }
 
-  public String getSignature() {
-    return signature;
-  }
-
   public Optional<CpmDocument> getCpmDocument() {
     return cpmDocument;
   }
@@ -164,11 +141,6 @@ public class Document extends ValidatableDTO implements
     return getCpmDocument()
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getLocalPart);
-  }
-
-  @Override
-  public String toString() {
-    return "Document [graph=" + graph + ", format=" + format + ", signature=" + signature + ", cpmDocument=" + cpmDocument + ", token=" + token + "]";
   }
 
 }

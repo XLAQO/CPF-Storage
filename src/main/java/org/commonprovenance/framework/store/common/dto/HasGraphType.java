@@ -20,4 +20,11 @@ public interface HasGraphType<T extends HasGraphType<T>> {
         .map(to::withGraphType)
         .orElse(to);
   }
+
+  public static <T extends HasType<T>, F extends HasType<F>> UnaryOperator<T> addGraphType(F from) {
+    return (T to) -> Optional.ofNullable(from)
+        .map(F::getType)
+        .map(to::withType)
+        .orElse(to);
+  }
 }

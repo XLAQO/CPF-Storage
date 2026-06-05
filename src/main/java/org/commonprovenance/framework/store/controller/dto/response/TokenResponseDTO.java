@@ -19,6 +19,12 @@ public class TokenResponseDTO implements
     this.jwt = null;
   }
 
+  @Override
+  public TokenResponseDTO withJwt(String jwt) {
+    return new TokenResponseDTO(jwt);
+  }
+
+  @Override
   public String getJwt() {
     return jwt;
   }

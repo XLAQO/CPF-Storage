@@ -44,6 +44,6 @@ public interface HasJwtToken<T extends HasJwtToken<T>> {
     return Either.<ApplicationException, T> right(value)
         .map(T::getJwt)
         .flatMap(JwtUtils::extractTokenTimestamp)
-        .map(value::withCreatedOn);
+        .map(createdOn -> value.withCreatedOn(createdOn)); // TODO: check this
   }
 }

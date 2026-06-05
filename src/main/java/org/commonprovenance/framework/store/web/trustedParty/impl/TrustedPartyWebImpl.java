@@ -61,8 +61,8 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
   }
 
   @Override
-  public Function<Organization, Mono<Token>> issueGraphToken(GraphType graphType) {
-    return (Organization organization) -> MONO.fromEither(IssueTokenFormFactory.fromModel(organization, graphType))
+  public Function<Organization, Mono<Token>> issueGraphToken(String signature) {
+    return (Organization organization) -> MONO.fromEither(IssueTokenFormFactory.build(organization, signature))
         .flatMap(organization.getTrustedParty()
             .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
@@ -76,8 +76,24 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
   }
 
   @Override
-  public Mono<Boolean> verifySignature(Organization organization) {
-    return MONO.fromEither(VerifySignatureFormFactory.build(organization))
+  public Function<Organization, Mono<Token>> issueGraphToken(GraphType graphType) {
+    return (Organization organization) -> MONO.fromEither(IssueTokenFormFactory.build(organization, graphType))
+        .flatMap(organization.getTrustedParty()
+            .flatMap(TrustedParty::getUrl)
+            .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
+            .orElse(this.client.sendPostRequest("/issueToken", TokenTPResponseDTO.class)))
+        .flatMap(MONO.liftEffectToMono(TokenFactory::build))
+        .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'."))
+        .doOnError(throwable -> LOGGER.error(
+            LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!\n" + throwable.getMessage()))
+        .onErrorMap(ApplicationExceptionFactory.handleThrowable(
+            new InternalApplicationException("Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!")));
+  }
+
+  @Override
+  public Function<Organization, Mono<Boolean>> verifySignature(String siganture) {
+    return (Organization organization) -> Mono.just(organization)
+        .flatMap(MONO.liftEffectToMono(VerifySignatureFormFactory.build(siganture)))
         .flatMap(organization.getTrustedParty()
             .flatMap(TrustedParty::getUrl)
             .map(this.client.sendCustomPostRequest("/verifySignature", Void.class))

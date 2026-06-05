@@ -88,7 +88,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
             .flatMap(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory))
             .map(organization::withDocument)))
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
-        .delayUntil(this.trustedPartyWebService::verifySignature)
+        .delayUntil(this.trustedPartyWebService.verifySignature(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("{} Signature has been verified.", LOG_PREFIX))
         .delayUntil(organization -> Mono.just(organization)
             .flatMap(MONO.liftOptionalToMono(
@@ -108,7 +108,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
         // TODO: check provenance constraints
         )
         .doOnNext(_ -> LOGGER.debug("Document has been validated and considered as valid."))
-        .delayUntil(this.trustedPartyWebService::issueGraphToken)
+        .flatMap(this.trustedPartyWebService.issueGraphToken(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("Token has been issued by TrustedParty."))
         .delayUntil(this.organizationService::storeDocument)
         .doOnNext(_ -> LOGGER.debug("Document has been saved."))

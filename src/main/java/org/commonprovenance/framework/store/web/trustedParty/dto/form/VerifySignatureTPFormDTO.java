@@ -1,14 +1,14 @@
 package org.commonprovenance.framework.store.web.trustedParty.dto.form;
 
-import org.commonprovenance.framework.store.common.dto.HasGraph;
-import org.commonprovenance.framework.store.common.dto.HasIdentifier;
+import org.commonprovenance.framework.store.common.dto.HasDocumentGraph;
+import org.commonprovenance.framework.store.common.dto.HasOrganizationId;
 import org.commonprovenance.framework.store.common.dto.HasSignature;
 import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
 
 public class VerifySignatureTPFormDTO extends ValidatableDTO
     implements
-    HasIdentifier<VerifySignatureTPFormDTO>,
-    HasGraph<VerifySignatureTPFormDTO>,
+    HasOrganizationId<VerifySignatureTPFormDTO>,
+    HasDocumentGraph<VerifySignatureTPFormDTO>,
     HasSignature<VerifySignatureTPFormDTO> {
   private final String organizationId;
   private final String document;
@@ -30,39 +30,41 @@ public class VerifySignatureTPFormDTO extends ValidatableDTO
   }
 
   @Override
-  public VerifySignatureTPFormDTO withIdentifier(String organizationId) {
+  public VerifySignatureTPFormDTO withOrganizationId(String organizationId) {
     return new VerifySignatureTPFormDTO(
         organizationId,
-        this.getGraph(),
+        this.getDocument(),
         this.getSignature());
   }
 
   @Override
-  public VerifySignatureTPFormDTO withGraph(String document) {
+  public VerifySignatureTPFormDTO withDocument(String document) {
     return new VerifySignatureTPFormDTO(
-        this.getIdentifier(),
+        this.getOrganizationId(),
         document,
         this.getSignature());
   }
 
+  @Override
   public VerifySignatureTPFormDTO withSignature(String signature) {
     return new VerifySignatureTPFormDTO(
-        this.getIdentifier(),
-        this.getGraph(),
+        this.getOrganizationId(),
+        this.getDocument(),
         signature);
   }
 
   @Override
-  public String getIdentifier() {
+  public String getOrganizationId() {
     return organizationId;
   }
 
   @Override
-  public String getGraph() {
+  public String getDocument() {
     return document;
   }
 
   public String getSignature() {
     return signature;
   }
+
 }

@@ -13,7 +13,9 @@ import reactor.core.publisher.Mono;
 public interface TrustedPartyWeb {
   Mono<TrustedParty> getTrustedParty(Optional<String> optTrustedPartyBaseUrl);
 
+  Function<Organization, Mono<Token>> issueGraphToken(String signature);
+
   Function<Organization, Mono<Token>> issueGraphToken(GraphType graphType);
 
-  Mono<Boolean> verifySignature(Organization organization);
+  Function<Organization, Mono<Boolean>> verifySignature(String singature);
 }

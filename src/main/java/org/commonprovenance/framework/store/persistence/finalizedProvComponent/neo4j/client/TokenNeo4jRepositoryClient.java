@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface TokenNeo4jRepositoryClient extends ReactiveNeo4jRepository<TokenNode, String> {
   @Query("""
-      MATCH (token:Token)-[:belongs_to]->(document:Document)
+      MATCH (document:Document)-[:has_token]->(token:Token)
       WHERE document.identifier = $documentIdentifier
       RETURN elementId(token) as id
       """)

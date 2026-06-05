@@ -17,8 +17,7 @@ public class TokenFactory {
   private static <T extends HasJwtToken<T>> Function<Token, Either<ApplicationException, Token>> mapper(T data) {
     return (Token token) -> Either.<ApplicationException, Token> right(MonoidComposition.compose(
         token,
-        List.of(HasJwtToken.addJwt(data))))
-        .flatMap(HasJwtToken::loadCreatedOn);
+        List.of(HasJwtToken.addJwt(data))));
   }
 
   private static <T> Function<Token, Either<ApplicationException, Token>> mapper(T data) {
@@ -40,7 +39,8 @@ public class TokenFactory {
 
   public static <T extends HasJwtToken<T>> Either<ApplicationException, Token> build(T data) {
     return Either.<ApplicationException, Token> right(new Token())
-        .flatMap(TokenFactory.mapper(data));
+        .flatMap(TokenFactory.mapper(data))
+        .flatMap(HasJwtToken::loadCreatedOn);
   }
 
 }

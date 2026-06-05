@@ -19,9 +19,9 @@ public interface TrustedPartyWebService {
 
   Function<Organization, Mono<Organization>> setTrustedPartyByBaseUrl(Optional<String> optTrustedPartyBaseUrl);
 
-  Mono<Void> verifySignature(Organization organization);
+  Function<Organization, Mono<Void>> verifySignature(String signature);
 
-  Mono<Organization> issueGraphToken(Organization organization);
+  Function<Organization, Mono<Organization>> issueGraphToken(String signature);
 
   Function<Organization, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl);
 

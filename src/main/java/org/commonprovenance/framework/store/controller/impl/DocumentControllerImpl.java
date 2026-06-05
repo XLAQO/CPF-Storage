@@ -106,7 +106,6 @@ public class DocumentControllerImpl implements DocumentController {
   public Mono<TokenResponseDTO> createProvDocument(
       @PathVariable String organizationIdentifier,
       @RequestBody DocumentFormDTO body) {
-    System.out.println(organizationIdentifier);
     return this.documentFacade.createProvDocument(organizationIdentifier, body);
 
   }

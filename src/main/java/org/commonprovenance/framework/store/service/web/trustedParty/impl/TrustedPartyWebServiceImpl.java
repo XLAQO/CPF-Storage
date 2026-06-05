@@ -86,19 +86,19 @@ public class TrustedPartyWebServiceImpl implements TrustedPartyWebService {
   }
 
   @Override
-  public Mono<Void> verifySignature(Organization organization) {
-    return Mono.just(organization)
+  public Function<Organization, Mono<Void>> verifySignature(String signature) {
+    return (Organization organization) -> Mono.just(organization)
         .flatMap(MONO.makeSureAsync(
-            this.trustedPartyWeb::verifySignature,
+            this.trustedPartyWeb.verifySignature(signature),
             _ -> new BadRequestException("Invalid signature!")))
         .then();
 
   }
 
   @Override
-  public Mono<Organization> issueGraphToken(Organization organization) {
-    return Mono.just(organization)
-        .flatMap(this.trustedPartyWeb.issueGraphToken(GraphType.GRAPH))
+  public Function<Organization, Mono<Organization>> issueGraphToken(String signature) {
+    return (Organization organization) -> Mono.just(organization)
+        .flatMap(this.trustedPartyWeb.issueGraphToken(signature))
         .flatMap(MONO.liftOptionalToMono(
             token -> organization.getDocument().map(document -> document.withToken(token)),
             _ -> new InvalidValueException("Document has not been deserialized yet!")))
