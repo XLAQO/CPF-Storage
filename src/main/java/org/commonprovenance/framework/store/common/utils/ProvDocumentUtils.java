@@ -66,15 +66,14 @@ public final class ProvDocumentUtils {
 
   public static Function<String, Either<ApplicationException, Document>> deserialize(Formats.ProvFormat format) {
 
-    Function<Formats.ProvFormat, Function<String, Either<ApplicationException, Document>>> stringToProv = (
-        Formats.ProvFormat provFormat) -> (String document) -> {
-          return EITHER.<InputStream, InteropFramework, Document> combineChecked(
-              Either.<ApplicationException, String> right(document)
-                  .flatMap(BytesUtils::stringToBytes_UTF8)
-                  .flatMap(EITHER.liftEither(bs -> new ByteArrayInputStream(bs))),
-              EITHER.liftEither(() -> new InteropFramework()),
-              (InputStream is, InteropFramework interop) -> interop.readDocument(is, format));
-        };
+    Function<Formats.ProvFormat, Function<String, Either<ApplicationException, Document>>> stringToProv = (Formats.ProvFormat provFormat) -> (String document) -> {
+      return EITHER.<InputStream, InteropFramework, Document> combineChecked(
+          Either.<ApplicationException, String> right(document)
+              .flatMap(BytesUtils::stringToBytes_UTF8)
+              .flatMap(EITHER.liftEither(bs -> new ByteArrayInputStream(bs))),
+          EITHER.liftEither(() -> new InteropFramework()),
+          (InputStream is, InteropFramework interop) -> interop.readDocument(is, format));
+    };
 
     return (String document) -> Either.<ApplicationException, String> right(document)
         .flatMap(EITHER.makeSureBefore(
