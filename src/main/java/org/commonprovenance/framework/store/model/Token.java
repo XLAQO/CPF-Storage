@@ -45,6 +45,15 @@ public class Token implements
         this.getCreatedOn());
   }
 
+  public Token withTrustedParty(Optional<TrustedParty> maybeTrustedParty) {
+    return maybeTrustedParty
+        .map(trustedParty -> new Token(
+            this.getJwt(),
+            trustedParty,
+            this.getCreatedOn()))
+        .orElse(this);
+  }
+
   public Token withCreatedOn(Long createdOn) {
     return new Token(
         this.getJwt(),
