@@ -1,31 +1,36 @@
 package org.commonprovenance.framework.store.controller.facade.impl;
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
-import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
+import java.util.Collections;
+
+import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
+import org.commonprovenance.framework.store.controller.dto.response.DocumentResponseDTO;
 import org.commonprovenance.framework.store.controller.dto.response.TokenResponseDTO;
+import org.commonprovenance.framework.store.controller.dto.response.factory.DocumentResponseFactory;
 import org.commonprovenance.framework.store.controller.dto.response.factory.TokenResponseFactory;
 import org.commonprovenance.framework.store.controller.facade.DocumentFacade;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
-import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
-import org.commonprovenance.framework.store.exceptions.NotFoundException;
+import org.commonprovenance.framework.store.model.Document;
+import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.DocumentFactory;
 import org.commonprovenance.framework.store.model.utils.DocumentUtils;
-import org.commonprovenance.framework.store.model.utils.OrganizationUtils;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
 import org.commonprovenance.framework.store.service.persistence.metaComponent.MetaProvenanceComponentService;
 import org.commonprovenance.framework.store.service.web.trustedParty.TrustedPartyWebService;
 import org.openprovenance.prov.model.ProvFactory;
+import org.openprovenance.prov.model.interop.Formats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import cz.muni.fi.cpm.model.CpmDocument;
 import cz.muni.fi.cpm.model.ICpmFactory;
 import cz.muni.fi.cpm.model.ICpmProvFactory;
 import io.vavr.control.Either;
@@ -76,21 +81,16 @@ public class DocumentFacadeImpl implements DocumentFacade {
   }
 
   @Override
-  public Mono<TokenResponseDTO> createProvDocument(String organizationIdentifier, DocumentFormDTO body) {
-    return Mono.just(organizationIdentifier)
-        .delayUntil(MONO.makeSureNotNull(new BadRequestException("Organization identifier can not be null or empty!")))
-        .flatMap(organizationService::getOrganizationByIdentifier)
-        .delayUntil(MONO.liftEffectToMono(OrganizationUtils::validateTrustedParty))
-        .doOnNext(_ -> LOGGER.debug("{} Organization with TrustedParty has been loaded.", LOG_PREFIX))
-        .flatMap(MONO.liftEffectToMono(organization -> Either.<ApplicationException, DocumentFormDTO> right(body)
-            .flatMap(EITHER.makeSureNotNull(_ -> new BadRequestException("Request body can not be null or empty!")))
+  public Mono<TokenResponseDTO> createProvDocument(Organization organization, DocumentFormDTO body) {
+    return Mono.just(organization)
+        .flatMap(MONO.liftEffectToMono(org -> Either.<ApplicationException, DocumentFormDTO> right(body)
             .map(DocumentFactory::build)
             .flatMap(document -> document.withCpmDocument(this.provFactory, this.cpmProvFactory, this.cpmFactory))
-            .map(organization::withDocument)))
+            .map(org::withDocument)))
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
         .delayUntil(this.trustedPartyWebService.verifySignature(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("{} Signature has been verified.", LOG_PREFIX))
-        .delayUntil(organization -> Mono.just(organization)
+        .delayUntil(org -> Mono.just(org)
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
                 _ -> new InvalidValueException("Document has not been deserialized yet!")))
@@ -122,12 +122,57 @@ public class DocumentFacadeImpl implements DocumentFacade {
   }
 
   @Override
-  public Mono<Void> exists(String identifier) {
-    return Mono.justOrEmpty(identifier)
-        .flatMap(MONO.makeSureAsync(
-            this.documentService::existsByIdentifier,
-            id -> new NotFoundException("Document with identifier '" + id + "' does not exist!")))
-        .then();
+  public Mono<DocumentResponseDTO> getProvDocument(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
+        .map(DocumentResponseFactory::build);
+  }
+
+  @Override
+  public Mono<DocumentResponseDTO> getDomainProvDocument(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
+        .flatMap(MONO.liftOptionalToMono(Document::getCpmDocument))
+        .map(cpm -> new CpmDocument(
+            cpm.getBundleId(),
+            Collections.emptyList(),
+            cpm.getDomainSpecificPart(),
+            Collections.emptyList(),
+            this.provFactory,
+            this.cpmProvFactory,
+            this.cpmFactory))
+        .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+        .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
+        .flatMap(MONO.liftEffectToMono(cpmStr -> new Document(cpmStr, Format.JSON)
+            .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
+        .map(organization::withDocument)
+        .flatMap(this.trustedPartyWebService::issueDomainSpecificGraphToken)
+        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
+        .map(DocumentResponseFactory::build);
+
+  }
+
+  @Override
+  public Mono<DocumentResponseDTO> getBackboneProvDocument(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
+        .flatMap(MONO.liftOptionalToMono(Document::getCpmDocument))
+        .map(cpm -> new CpmDocument(
+            cpm.getBundleId(),
+            cpm.getTraversalInformationPart(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            this.provFactory,
+            this.cpmProvFactory,
+            this.cpmFactory))
+        .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+        .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
+        .flatMap(MONO.liftEffectToMono(cpmStr -> new Document(cpmStr, Format.JSON)
+            .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
+        .map(organization::withDocument)
+        .flatMap(this.trustedPartyWebService::issueBackboneGraphToken)
+        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
+        .map(DocumentResponseFactory::build);
   }
 
 }
