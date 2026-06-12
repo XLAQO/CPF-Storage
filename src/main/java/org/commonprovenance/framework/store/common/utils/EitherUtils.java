@@ -121,6 +121,14 @@ public interface EitherUtils {
           : Either.left(applicationExceptionBuilder.apply(value));
     }
 
+    public <R> Function1<R, Either<ApplicationException, R>> makeSureNot(
+        Predicate<R> validator,
+        Function1<R, ApplicationException> applicationExceptionBuilder) {
+      return (R value) -> !validator.test(value)
+          ? Either.right(value)
+          : Either.left(applicationExceptionBuilder.apply(value));
+    }
+
     public <R> Function1<R, Either<ApplicationException, R>> makeSure(
         Predicate<R> validator,
         Function1<String, ApplicationException> factory,
