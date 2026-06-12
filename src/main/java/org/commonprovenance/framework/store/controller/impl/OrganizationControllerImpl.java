@@ -59,8 +59,9 @@ public class OrganizationControllerImpl implements OrganizationController {
   @PutMapping(path = "/{identifier}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @NotNull
   @Operation(summary = "Update organization", parameters = { @Parameter(name = "identifier", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string")) })
-  @ApiResponses({ @ApiResponse(responseCode = "200", description = "Organization updated"),
-      @ApiResponse(responseCode = "400", description = "Invalid request payload", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = BadRequestDTO.class))),
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Organization updated"),
+      @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = BadRequestDTO.class))),
       @ApiResponse(responseCode = "404", description = "Organization not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NotFoundDTO.class))),
       @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class))) })
 
@@ -74,7 +75,9 @@ public class OrganizationControllerImpl implements OrganizationController {
   @GetMapping("/{identifier}")
   @Operation(summary = "Get organization by identifier", parameters = {
       @Parameter(name = "identifier", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string")) })
-  @ApiResponses({ @ApiResponse(responseCode = "200", description = "Organization fetched"),
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Organization fetched"),
+      @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = BadRequestDTO.class))),
       @ApiResponse(responseCode = "404", description = "Organization not found", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NotFoundDTO.class))),
       @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = InternalServerErrorDTO.class))) })
   public Mono<OrganizationResponseDTO> getOrganizationByIdentifier(
