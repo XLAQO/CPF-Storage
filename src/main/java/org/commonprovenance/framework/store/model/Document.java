@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.commonprovenance.framework.store.common.dto.HasFormat;
 import org.commonprovenance.framework.store.common.dto.HasGraph;
 import org.commonprovenance.framework.store.common.dto.HasIdentifierOptional;
-import org.commonprovenance.framework.store.common.dto.HasSignature;
 import org.commonprovenance.framework.store.common.dto.HasTokenOptional;
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
@@ -39,8 +38,7 @@ public class Document extends ValidatableDTO implements
 
   public Document(
       String graph,
-      Format format,
-      String signature) {
+      Format format) {
     this.graph = graph;
     this.format = format;
     this.cpmDocument = Optional.empty();

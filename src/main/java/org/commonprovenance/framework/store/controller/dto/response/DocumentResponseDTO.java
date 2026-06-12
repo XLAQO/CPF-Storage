@@ -11,19 +11,26 @@ public class DocumentResponseDTO implements
     HasTokenResponse<DocumentResponseDTO> {
 
   @Schema(description = "Stored provenance document payload", example = "ewogICJidW5kbGUiOiB7IC4uLiB9Cn0=")
-  private final String document;
+  private final String graph;
 
   @Schema(description = "Token issued for the returned document", implementation = TokenResponseDTO.class)
   private final TokenResponseDTO token;
 
-  public DocumentResponseDTO(String document, TokenResponseDTO token) {
-    this.document = document;
+  public DocumentResponseDTO(String graph, TokenResponseDTO token) {
+    this.graph = graph;
     this.token = token;
   }
 
   public DocumentResponseDTO() {
-    this.document = null;
+    this.graph = null;
     this.token = null;
+  }
+
+  @Override
+  public DocumentResponseDTO withGraph(String graph) {
+    return new DocumentResponseDTO(
+        graph,
+        this.getToken());
   }
 
   @Override
@@ -35,7 +42,7 @@ public class DocumentResponseDTO implements
 
   @Override
   public String getGraph() {
-    return document;
+    return graph;
   }
 
   public TokenResponseDTO getToken() {
