@@ -33,7 +33,33 @@ public class OrganizationResponseDTO implements
       "-----END CERTIFICATE-----")
   private final String clientCertificate;
 
-  @Schema(description = "PEM encoded intermediate certificates")
+  @Schema(description = "PEM encoded intermediate certificates", example = "[\"-----BEGIN CERTIFICATE-----"
+      +
+      "MIICAzCCAamgAwIBAgIUXasg/hr17lvGO6wzCe9psqHFD9MwCgYIKoZIzj0EAwIw" +
+      "bTELMAkGA1UEBhMCRVUxOjA4BgNVBAoMMURpc3RyaWJ1dGVkIFByb3ZlbmFuY2Ug" +
+      "RGVtbyBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkxIjAgBgNVBAMMGURQRCBDZXJ0aWZp" +
+      "Y2F0ZSBBdXRob3JpdHkwHhcNMjYwMzMxMTAyNDM1WhcNMzEwMzMwMTAyNDM1WjAu" +
+      "MQswCQYDVQQGEwJDWjEMMAoGA1UECgwDQ1BGMREwDwYDVQQDDAhjcGYtaW50MTBZ" +
+      "MBMGByqGSM49AgEGCCqGSM49AwEHA0IABLmZq7t7VPs6bJyNnH6NUBAxvSCEdRRS" +
+      "QGq+ESZc5+zETASkOPfqHEQkc/atqz+d7X/Sf/aDn7JwZ0mnEC6hCpqjZjBkMBIG" +
+      "A1UdEwEB/wQIMAYBAf8CAQEwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRpLdHn" +
+      "PMpijgKLlLtiD+dzzS8GqTAfBgNVHSMEGDAWgBQshCsItY73T6n4lPjXR/574ez2" +
+      "GTAKBggqhkjOPQQDAgNIADBFAiAAo3t8i/BVbOZ68JKn/j+YTzRlFyohlj1nd6qc" +
+      "rokKFAIhAJK4xAJfPdQr89D1PzKh8GAJiGqbeJh0f4UY/bSIXcwl" +
+      "-----END CERTIFICATE-----" +
+      "\",\"-----BEGIN CERTIFICATE-----" +
+      "MIIBxDCCAWqgAwIBAgIUTwRHh0gkw0wGo95BQ0erOuMtQ24wCgYIKoZIzj0EAwIw" +
+      "LjELMAkGA1UEBhMCQ1oxDDAKBgNVBAoMA0NQRjERMA8GA1UEAwwIY3BmLWludDEw" +
+      "HhcNMjYwMzMxMTAyNDQzWhcNMzEwMzMwMTAyNDQzWjAuMQswCQYDVQQGEwJDWjEM" +
+      "MAoGA1UECgwDQ1BGMREwDwYDVQQDDAhjcGYtaW50MjBZMBMGByqGSM49AgEGCCqG" +
+      "SM49AwEHA0IABA9JvLi5DwAZixixQ41Xnaqzg5HjAAl9X1JQot0wVvfG1cws3pX4" +
+      "3vW6fYfkmUON3MKlNmZxsUvkD6lD1+QqaF+jZjBkMBIGA1UdEwEB/wQIMAYBAf8C" +
+      "AQAwDgYDVR0PAQH/BAQDAgEGMB0GA1UdDgQWBBRa40NTdW5DcvncZAk3TAejmydY" +
+      "1TAfBgNVHSMEGDAWgBRpLdHnPMpijgKLlLtiD+dzzS8GqTAKBggqhkjOPQQDAgNI" +
+      "ADBFAiBXucydJVT/fLBX5UwZPN2eZATmGK04wBgeSY0xuGC5SAIhAJjmBRNQm1lD" +
+      "pxKlNY7frNF+N5eoC9UA6cOqvRtJ2C5r" +
+      "-----END CERTIFICATE-----" +
+      "\"]")
   private final List<String> intermediateCertificates;
 
   public OrganizationResponseDTO(
