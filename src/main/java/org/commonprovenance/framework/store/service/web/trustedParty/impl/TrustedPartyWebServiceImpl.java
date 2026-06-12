@@ -106,13 +106,23 @@ public class TrustedPartyWebServiceImpl implements TrustedPartyWebService {
   }
 
   @Override
-  public Function<Organization, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl) {
-    return this.trustedPartyWeb.issueGraphToken(GraphType.DOMAIN_SPECIFIC);
+  public Mono<Organization> issueDomainSpecificGraphToken(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(this.trustedPartyWeb.issueGraphToken(GraphType.DOMAIN_SPECIFIC))
+        .flatMap(MONO.liftOptionalToMono(
+            token -> organization.getDocument().map(document -> document.withToken(token)),
+            _ -> new InvalidValueException("Document has not been deserialized yet!")))
+        .map(organization::withDocument);
   }
 
   @Override
-  public Function<Organization, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl) {
-    return this.trustedPartyWeb.issueGraphToken(GraphType.BACKBONE);
+  public Mono<Organization> issueBackboneGraphToken(Organization organization) {
+    return Mono.just(organization)
+        .flatMap(this.trustedPartyWeb.issueGraphToken(GraphType.BACKBONE))
+        .flatMap(MONO.liftOptionalToMono(
+            token -> organization.getDocument().map(document -> document.withToken(token)),
+            _ -> new InvalidValueException("Document has not been deserialized yet!")))
+        .map(organization::withDocument);
   }
 
 }

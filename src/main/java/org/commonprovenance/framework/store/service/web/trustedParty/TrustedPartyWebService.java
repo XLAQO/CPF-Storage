@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.commonprovenance.framework.store.model.Organization;
-import org.commonprovenance.framework.store.model.Token;
 
 import reactor.core.publisher.Mono;
 
@@ -23,7 +22,7 @@ public interface TrustedPartyWebService {
 
   Function<Organization, Mono<Organization>> issueGraphToken(String signature);
 
-  Function<Organization, Mono<Token>> issueDomainSpecificGraphToken(Optional<String> trustedPartyUrl);
+  Mono<Organization> issueDomainSpecificGraphToken(Organization organization);
 
-  Function<Organization, Mono<Token>> issueBackboneGraphToken(Optional<String> trustedPartyUrl);
+  Mono<Organization> issueBackboneGraphToken(Organization organization);
 }

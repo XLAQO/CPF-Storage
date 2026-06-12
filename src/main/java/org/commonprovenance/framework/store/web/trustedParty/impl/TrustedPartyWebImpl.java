@@ -83,6 +83,7 @@ public class TrustedPartyWebImpl implements TrustedPartyWeb {
             .map(this.client.sendCustomPostRequest("/issueToken", TokenTPResponseDTO.class))
             .orElse(this.client.sendPostRequest("/issueToken", TokenTPResponseDTO.class)))
         .flatMap(MONO.liftEffectToMono(TokenFactory::build))
+        .map(token -> token.withTrustedParty(organization.getTrustedParty()))
         .doOnSuccess(_ -> LOGGER.trace(LOG_PREFIX + "Token has been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'."))
         .doOnError(throwable -> LOGGER.error(
             LOG_PREFIX + "Token has not been issued by TrustedParty at URL '" + getTrustedPartyUrl(organization) + "'!\n" + throwable.getMessage()))
