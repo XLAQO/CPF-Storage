@@ -82,7 +82,6 @@ public class DocumentControllerImpl implements DocumentController {
   public Mono<DocumentResponseDTO> getFinalizedProvDocumentByIdentifier(
       @Parameter(hidden = true) @LoadOrganizationDocument() Organization organization) {
     return Mono.just(organization)
-        .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
         .flatMap(this.documentFacade::getProvDocument);
   }
 
@@ -101,7 +100,8 @@ public class DocumentControllerImpl implements DocumentController {
   @Override
   public Mono<DocumentResponseDTO> getDomainProvDocumentByIdentifier(
       @Parameter(hidden = true) @LoadOrganizationDocument() Organization organization) {
-    return this.documentFacade.getDomainProvDocument(organization);
+    return Mono.just(organization)
+        .flatMap(this.documentFacade::getDomainProvDocument);
   }
 
   @NotNull
@@ -118,7 +118,8 @@ public class DocumentControllerImpl implements DocumentController {
   @Override
   public Mono<DocumentResponseDTO> getBackboneProvDocumentByIdentifier(
       @Parameter(hidden = true) @LoadOrganizationDocument() Organization organization) {
-    return this.documentFacade.getBackboneProvDocument(organization);
+    return Mono.just(organization)
+        .flatMap(this.documentFacade::getBackboneProvDocument);
   }
 
   @NotNull
