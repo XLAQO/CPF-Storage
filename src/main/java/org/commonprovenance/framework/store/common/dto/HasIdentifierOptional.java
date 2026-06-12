@@ -28,13 +28,22 @@ public interface HasIdentifierOptional<T extends HasIdentifierOptional<T>> {
 
   static <T extends HasIdentifierOptional<T>, F> UnaryOperator<T> addIdentifierIfPresent(F from) {
     return (T to) -> Optional.ofNullable(from)
-        .flatMap((F v) -> (v instanceof HasIdentifier<?> has)
-            ? Optional.of(has).map(HasIdentifier::getIdentifier)
-            : (v instanceof HasIdentifierOptional<?> maybeHas)
-                ? maybeHas.getIdentifier()
-                : Optional.empty())
+        .flatMap(HasIdentifierOptional::getValue)
         .map(to::withIdentifier)
         .orElse(to);
+  }
+
+  private static <T> Optional<String> getValue(T form) {
+    if (form instanceof HasIdentifier<?> has)
+      return Optional.of(has.getIdentifier());
+
+    if (form instanceof HasIdentifierOptional<?> maybeHas)
+      return maybeHas.getIdentifier();
+
+    if (form instanceof org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.types.HasIdentifier has)
+      return Optional.of(has.getIdentifier());
+
+    return Optional.empty();
   }
 
 }

@@ -37,13 +37,22 @@ public interface HasFormat<T extends HasFormat<T>> {
 
   static <T extends HasFormat<T>, F> UnaryOperator<T> addFormatIfPresent(F from) {
     return (T to) -> Optional.ofNullable(from)
-        .flatMap((F v) -> (v instanceof HasFormat<?> has)
-            ? Optional.of(has).map(HasFormat::getFormat)
-            : (v instanceof HasFormatSerialized<?> hasSerialized)
-                ? Format.from(hasSerialized.getDocumentFormat())
-                : Optional.empty())
+        .flatMap(HasFormat::getValue)
         .map(to::withFormat)
         .orElse(to);
+  }
+
+  private static <T> Optional<Format> getValue(T form) {
+    if (form instanceof HasFormat<?> has)
+      return Optional.of(has.getFormat());
+
+    if (form instanceof HasFormatSerialized<?> has)
+      return Optional.of(has.getDocumentFormat()).flatMap(Format::from);
+
+    if (form instanceof org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.types.HasFormat has)
+      return Optional.of(has.getFormat()).flatMap(Format::from);
+
+    return Optional.empty();
   }
 
 }

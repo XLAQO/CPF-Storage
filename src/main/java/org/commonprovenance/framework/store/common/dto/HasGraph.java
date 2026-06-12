@@ -29,11 +29,18 @@ public interface HasGraph<T extends HasGraph<T>> {
 
   static <U extends HasGraph<U>, F> UnaryOperator<U> addGraphIfPresent(F from) {
     return (U to) -> Optional.ofNullable(from)
-        .flatMap((F v) -> (v instanceof HasGraph<?> has)
-            ? Optional.of(has)
-            : Optional.empty())
-        .map(HasGraph::getGraph)
+        .flatMap(HasGraph::getValue)
         .map(to::withGraph)
         .orElse(to);
+  }
+
+  private static <T> Optional<String> getValue(T form) {
+    if (form instanceof HasGraph<?> has)
+      return Optional.of(has.getGraph());
+
+    if (form instanceof org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.types.HasGraph has)
+      return Optional.of(has.getGraph());
+
+    return Optional.empty();
   }
 }

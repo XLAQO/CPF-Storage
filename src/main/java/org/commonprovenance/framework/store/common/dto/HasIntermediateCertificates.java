@@ -1,5 +1,6 @@
 package org.commonprovenance.framework.store.common.dto;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -23,12 +24,18 @@ public interface HasIntermediateCertificates<T extends HasIntermediateCertificat
 
   static <U extends HasIntermediateCertificates<U>, F> UnaryOperator<U> addIntermediateCertificatesIfPresent(F from) {
     return (U to) -> Optional.ofNullable(from)
-        .flatMap((F v) -> (v instanceof HasIntermediateCertificates<?> has)
-            ? Optional.of(has)
-            : Optional.empty())
-        .map(HasIntermediateCertificates::getIntermediateCertificates)
+        .map(HasIntermediateCertificates::getValue)
         .map(to::withIntermediateCertificates)
         .orElse(to);
   }
 
+  private static <T> List<String> getValue(T form) {
+    if (form instanceof HasIntermediateCertificates<?> has)
+      return has.getIntermediateCertificates();
+
+    if (form instanceof org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.types.HasIntermediateCertificates has)
+      return has.getIntermediateCertificates();
+
+    return Collections.emptyList();
+  }
 }

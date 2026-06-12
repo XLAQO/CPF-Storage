@@ -29,11 +29,21 @@ public interface HasUrl<T extends HasUrl<T>> {
 
   static <U extends HasUrl<U>, F> UnaryOperator<U> addUrlIfPresent(F from) {
     return (U to) -> Optional.ofNullable(from)
-        .flatMap((F v) -> (v instanceof HasUrl<?> has)
-            ? Optional.of(has)
-            : Optional.empty())
-        .map(HasUrl::getUrl)
+        .flatMap(HasUrl::getValue)
         .map(to::withUrl)
         .orElse(to);
+  }
+
+  private static <T> Optional<String> getValue(T form) {
+    if (form instanceof HasUrl<?> has)
+      return Optional.of(has.getUrl());
+
+    if (form instanceof HasUrlOptional<?> has)
+      return has.getUrl();
+
+    if (form instanceof org.commonprovenance.framework.store.persistence.finalizedProvComponent.model.types.HasUrl has)
+      return Optional.of(has.getUrl());
+
+    return Optional.empty();
   }
 }
