@@ -28,13 +28,6 @@ public interface HasDocumentOptional<T extends HasDocumentOptional<T>> {
         .orElse(to);
   }
 
-  static <T extends HasDocumentOptional<T>, F extends HasDocument<F>> UnaryOperator<T> addDocument(F from) {
-    return (T to) -> Optional.ofNullable(from)
-        .map(F::getDocument)
-        .map(to::withDocument)
-        .orElse(to);
-  }
-
   static <T extends HasDocumentOptional<T>, F extends HasDocumentNodes> Function<T, Either<ApplicationException, T>> addDocument(F from) {
     return (T to) -> Either.<ApplicationException, F> right(from)
         .flatMap(EITHER.makeSureNotNull(_ -> new InvalidValueException("From Object can not be null!")))
