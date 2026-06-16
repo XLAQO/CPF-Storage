@@ -4,9 +4,9 @@ import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITH
 
 import java.util.Optional;
 
+import org.commonprovenance.framework.store.common.dto.HasCpmDocument;
 import org.commonprovenance.framework.store.common.dto.HasFormat;
 import org.commonprovenance.framework.store.common.dto.HasGraph;
-import org.commonprovenance.framework.store.common.dto.HasCpmDocument;
 import org.commonprovenance.framework.store.common.dto.HasTokenOptional;
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
@@ -16,7 +16,6 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.openprovenance.prov.model.ProvFactory;
-import org.openprovenance.prov.model.QualifiedName;
 import org.openprovenance.prov.model.interop.Formats;
 
 import cz.muni.fi.cpm.model.CpmDocument;
@@ -127,18 +126,13 @@ public class Document extends ValidatableDTO implements
     return format;
   }
 
+  @Override
   public Optional<CpmDocument> getCpmDocument() {
     return cpmDocument;
   }
 
   public Optional<Token> getToken() {
     return token;
-  }
-
-  public Optional<String> getIdentifier() {
-    return getCpmDocument()
-        .map(CpmDocument::getBundleId)
-        .map(QualifiedName::getLocalPart);
   }
 
 }

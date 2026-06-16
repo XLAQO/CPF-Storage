@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
-import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
@@ -99,9 +98,7 @@ public class TokenNeo4jRepository implements TokenRepository {
   @Override
   public Function<Document, Mono<Void>> connectWasIssuedBy(Optional<TrustedParty> maybeTrustedParty) {
     return (Document document) -> MONO.combineM(Mono.justOrEmpty(document)
-        .flatMap(MONO.liftOptionalToMono(
-            Document::getIdentifier,
-            _ -> new InvalidValueException("Document has not been deserialized yet!")))
+        .flatMap(MONO.liftEffectToMono(Document::getIdentifier))
         .flatMap(this::getTokenIdByDocumentIdentifier),
         Mono.justOrEmpty(maybeTrustedParty)
             .map(TrustedParty::getName),

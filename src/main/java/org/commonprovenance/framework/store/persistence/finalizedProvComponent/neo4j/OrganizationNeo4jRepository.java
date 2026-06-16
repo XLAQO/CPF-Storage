@@ -95,7 +95,8 @@ public class OrganizationNeo4jRepository implements OrganizationRepository {
     return (Document document) -> MONO.combineM(
         MONO.<String> makeSureNotNullWithMessage("Organization identifier can not be 'null'!")
             .apply(identifier),
-        Mono.justOrEmpty(document.getIdentifier())
+        Mono.justOrEmpty(document)
+            .flatMap(MONO.liftEffectToMono(Document::getIdentifier))
             .flatMap(MONO.<String> makeSureNotNullWithMessage("Document identifier can not be 'null'!")),
         client::createOwnsRelationship)
         .then();

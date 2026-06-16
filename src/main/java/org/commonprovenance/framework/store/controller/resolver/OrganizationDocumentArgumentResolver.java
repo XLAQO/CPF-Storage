@@ -91,7 +91,8 @@ public class OrganizationDocumentArgumentResolver implements HandlerMethodArgume
             .flatMap(MONO.liftEffectToMono(doc -> doc.withCpmDocument(provFactory, cpmProvFactory, cpmFactory))),
         (organization, document) -> Mono.just(document)
             .flatMap(MONO.makeSureAsync(
-                doc -> Mono.justOrEmpty(doc.getIdentifier())
+                doc -> Mono.just(doc)
+                    .flatMap(MONO.liftEffectToMono(Document::getIdentifier))
                     .flatMap(this.documentService::getOrganizationIdentifierByIdentifier)
                     .map(organization.getIdentifier()::equals),
                 _ -> new BadRequestException(

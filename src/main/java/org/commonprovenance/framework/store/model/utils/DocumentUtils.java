@@ -200,9 +200,4 @@ public final class DocumentUtils {
             "CpmDocument is not present!"));
   }
 
-  public static Either<ApplicationException, String> getDocumentIdentifier(Document document) {
-    return EITHER.liftEither(document.getIdentifier())
-        .mapLeft(_ -> new InvalidValueException("Unknown Document identifier!"));
-  }
-
 }

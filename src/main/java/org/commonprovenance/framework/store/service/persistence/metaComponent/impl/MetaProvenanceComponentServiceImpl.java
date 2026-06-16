@@ -67,7 +67,7 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
                 _ -> new InvalidValueException("Document has not been deserialized yet!")))
-            .flatMap(MONO.liftEffectToMono(DocumentUtils::getDocumentIdentifier))
+            .flatMap(MONO.liftEffectToMono(Document::getIdentifier))
             .flatMap(MONO.makeSureNotNullWithMessage("Bundle identifier can not be null!")),
         (metaBundleIdentifier, bundleIdentifier) -> metaBundleRepository.getLastVersionNo(metaBundleIdentifier)
             .defaultIfEmpty(0)
