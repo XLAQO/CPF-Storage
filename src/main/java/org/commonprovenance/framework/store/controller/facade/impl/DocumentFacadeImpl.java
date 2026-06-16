@@ -90,11 +90,11 @@ public class DocumentFacadeImpl implements DocumentFacade {
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
         .delayUntil(this.trustedPartyWebService.verifySignature(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("{} Signature has been verified.", LOG_PREFIX))
+        .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
         .delayUntil(org -> Mono.just(org)
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
                 _ -> new InvalidValueException("Document has not been deserialized yet!")))
-            .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
             // check document does not exists yet
             .delayUntil(this.documentService::checkDocumentDoesNotExists)
             // check connectors

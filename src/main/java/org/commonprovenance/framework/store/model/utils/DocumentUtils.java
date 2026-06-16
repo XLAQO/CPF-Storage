@@ -11,6 +11,7 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
+import org.commonprovenance.framework.store.model.Organization;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.HasOther;
 import org.openprovenance.prov.model.QualifiedName;
@@ -175,14 +176,15 @@ public final class DocumentUtils {
         .mapToVoid();
   }
 
-  public static Function1<Document, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {
-    return (Document document) -> Either.<ApplicationException, Document> right(document)
+  public static Function1<Organization, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {
+    return (Organization organization) -> Either.<ApplicationException, Organization> right(organization)
+        .flatMap(EITHER.liftEitherOptional(Organization::getDocument))
         .flatMap(DocumentUtils::getCpmDocument)
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getNamespaceURI)
         .flatMap(EITHER.makeSureNotNull(uri -> new InternalApplicationException("The bundle namespace uri '" + uri + "' does not resolve into known storage!!")))
         .flatMap(EITHER.makeSure(
-            uri -> uri.equals(configuration.getFqdn() + "documents/"),
+            uri -> uri.equals(configuration.getFqdn() + "organizations/" + organization.getIdentifier() + "/documents/"),
             InvalidValueException::new,
             uri -> "The bundle namespace uri '" + uri + "' does not resolve into known storage!!"))
         .mapToVoid();
