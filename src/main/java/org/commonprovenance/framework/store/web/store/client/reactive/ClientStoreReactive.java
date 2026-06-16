@@ -1,11 +1,10 @@
 package org.commonprovenance.framework.store.web.store.client.reactive;
 
-import org.springframework.stereotype.Component;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.web.config.WebConfig;
 import org.commonprovenance.framework.store.web.store.client.ClientStore;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
@@ -27,7 +26,6 @@ public class ClientStoreReactive implements ClientStore {
         .onStatus(
             status -> status.value() == 404,
             response -> Mono.error(() -> new NotFoundException("Resource not found at: " + response.request().getURI())))
-        .toBodilessEntity()
-        .map(ResponseEntity::getBody);
+        .bodyToMono(Void.class);
   }
 }

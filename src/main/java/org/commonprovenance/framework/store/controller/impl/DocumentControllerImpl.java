@@ -1,7 +1,5 @@
 package org.commonprovenance.framework.store.controller.impl;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
-
 import org.commonprovenance.framework.store.controller.DocumentController;
 import org.commonprovenance.framework.store.controller.dto.error.BadRequestDTO;
 import org.commonprovenance.framework.store.controller.dto.error.InternalServerErrorDTO;
@@ -136,6 +134,6 @@ public class DocumentControllerImpl implements DocumentController {
   @Override
   public Mono<Void> exists(
       @Parameter(hidden = true) @LoadOrganizationDocument(organizationIdentifier = "organizationIdentifier", documentIdentifier = "identifier") Organization organization) {
-    return Mono.empty();
+    return Mono.just(organization).then();
   }
 }
