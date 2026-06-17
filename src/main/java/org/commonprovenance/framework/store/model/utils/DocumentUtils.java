@@ -9,7 +9,6 @@ import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
-import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.openprovenance.prov.model.Entity;
@@ -164,17 +163,6 @@ public final class DocumentUtils {
             InvalidValueException::new,
             element -> "Invalid connector. Statement with id '" + element.getId().toString() + "' is not entity!")))
         .map(EITHER.traverse(Entity.class::cast));
-  }
-
-  public static Either<ApplicationException, Void> checkSpecForwardConnetorsAttrs(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .flatMap(DocumentUtils::getCpmDocument)
-        .flatMap(DocumentUtils::getSpecForwardConnectors)
-        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            DocumentUtils::isValidSpecForwardConnector,
-            InvalidValueException::new,
-            element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
-        .mapToVoid();
   }
 
   public static Function1<Organization, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {

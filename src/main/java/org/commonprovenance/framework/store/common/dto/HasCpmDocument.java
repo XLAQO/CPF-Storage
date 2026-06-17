@@ -2,10 +2,10 @@ package org.commonprovenance.framework.store.common.dto;
 
 import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
-import java.util.Optional;
-
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
+import org.commonprovenance.framework.store.model.utils.DocumentUtils;
+import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.QualifiedName;
 
 import cz.muni.fi.cpm.model.CpmDocument;
@@ -18,6 +18,16 @@ public interface HasCpmDocument<T extends HasCpmDocument<T>> {
     return getCpmDocument()
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getLocalPart);
+  }
+
+  default Either<ApplicationException, Void> checkSpecForwardConnetorsAttrs() {
+    return getCpmDocument()
+        .flatMap(DocumentUtils::getSpecForwardConnectors)
+        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
+            DocumentUtils::isValidSpecForwardConnector,
+            InvalidValueException::new,
+            element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
+        .mapToVoid();
   }
 
 }
