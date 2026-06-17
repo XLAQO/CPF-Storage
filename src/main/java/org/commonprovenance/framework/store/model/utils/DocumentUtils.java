@@ -2,7 +2,6 @@ package org.commonprovenance.framework.store.model.utils;
 
 import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
-import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
@@ -13,7 +12,6 @@ import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.HasOther;
 import org.openprovenance.prov.model.QualifiedName;
 import org.openprovenance.prov.model.Statement;
-import org.openprovenance.prov.model.interop.Formats;
 
 import cz.muni.fi.cpm.constants.CpmAttribute;
 import cz.muni.fi.cpm.constants.CpmType;
@@ -23,12 +21,6 @@ import io.vavr.Function1;
 import io.vavr.control.Either;
 
 public final class DocumentUtils {
-
-  public static Function1<CpmDocument, Either<ApplicationException, String>> serialize(Formats.ProvFormat format) {
-    return cpmDocument -> Either.<ApplicationException, CpmDocument> right(cpmDocument)
-        .map(CpmDocument::toDocument)
-        .flatMap(ProvDocumentUtils.serialize(format));
-  }
 
   public static Boolean isValidBackwardConnector(HasOther connector) {
     return (connector instanceof Entity entity)

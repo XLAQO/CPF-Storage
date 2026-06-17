@@ -5,6 +5,7 @@ import static org.commonprovenance.framework.store.common.publisher.PublisherHel
 import java.util.Collections;
 
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
+import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
 import org.commonprovenance.framework.store.controller.dto.response.DocumentResponseDTO;
@@ -141,7 +142,8 @@ public class DocumentFacadeImpl implements DocumentFacade {
             this.provFactory,
             this.cpmProvFactory,
             this.cpmFactory))
-        .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+        .map(CpmDocument::toDocument)
+        .flatMap(MONO.liftEffectToMono(ProvDocumentUtils.serialize(Formats.ProvFormat.JSON)))
         .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
         .flatMap(MONO.liftEffectToMono(cpmStr -> new Document(cpmStr, Format.JSON)
             .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))
@@ -165,7 +167,8 @@ public class DocumentFacadeImpl implements DocumentFacade {
             this.provFactory,
             this.cpmProvFactory,
             this.cpmFactory))
-        .flatMap(MONO.liftEffectToMono(DocumentUtils.serialize(Formats.ProvFormat.JSON)))
+        .map(CpmDocument::toDocument)
+        .flatMap(MONO.liftEffectToMono(ProvDocumentUtils.serialize(Formats.ProvFormat.JSON)))
         .flatMap(MONO.liftEffectToMono(Base64Utils::encodeFromString))
         .flatMap(MONO.liftEffectToMono(cpmStr -> new Document(cpmStr, Format.JSON)
             .withCpmDocument(provFactory, cpmProvFactory, cpmFactory)))

@@ -7,6 +7,7 @@ import java.util.List;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.openprovenance.prov.model.Activity;
+import org.openprovenance.prov.model.Document;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.QualifiedName;
 
@@ -21,6 +22,11 @@ public interface HasCpmDocument<T extends HasCpmDocument<T>> {
     return getCpmDocument()
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getLocalPart);
+  }
+
+  default Either<ApplicationException, Document> getProvDocument() {
+    return getCpmDocument()
+        .map(CpmDocument::toDocument);
   }
 
   default Either<ApplicationException, List<Entity>> getSpecForwardConnectors() {
