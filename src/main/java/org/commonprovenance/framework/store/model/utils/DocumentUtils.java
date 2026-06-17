@@ -2,8 +2,6 @@ package org.commonprovenance.framework.store.model.utils;
 
 import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
-import java.util.List;
-
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
@@ -21,7 +19,6 @@ import cz.muni.fi.cpm.constants.CpmAttribute;
 import cz.muni.fi.cpm.constants.CpmType;
 import cz.muni.fi.cpm.model.CpmDocument;
 import cz.muni.fi.cpm.model.CpmUtilities;
-import cz.muni.fi.cpm.model.INode;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 
@@ -80,21 +77,6 @@ public final class DocumentUtils {
   public static Either<ApplicationException, QualifiedName> getCpmReferencedBundleId(HasOther hasOther) {
     return Either.<ApplicationException, HasOther> right(hasOther)
         .flatMap(DocumentUtils.getCpmAttributeValue(CpmAttribute.REFERENCED_BUNDLE_ID));
-  }
-
-  public static Either<ApplicationException, QualifiedName> getMainActivityReferenceMetaBundleId(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .flatMap(Document::getCpmDocument)
-        .flatMap(DocumentUtils::getMainActivityReferenceMetaBundleId);
-  }
-
-  public static Either<ApplicationException, QualifiedName> getMainActivityReferenceMetaBundleId(CpmDocument cpmDocument) {
-    return Either.<ApplicationException, CpmDocument> right(cpmDocument)
-        .flatMap(EITHER.<CpmDocument> makeSureNotNullWithMessage("CpmDocument can not be null!"))
-        .map(CpmDocument::getMainActivity)
-        .flatMap(EITHER.makeSureNotNullWithMessage("MainActivity in CpmDocument can not be null!"))
-        .map(INode::getAnyElement)
-        .flatMap(DocumentUtils::getCpmReferencedMetaBundleId);
   }
 
   public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {

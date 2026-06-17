@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
+import org.commonprovenance.framework.store.model.Document;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openprovenance.prov.model.Element;
@@ -154,30 +155,29 @@ class DocumentUtilsTest {
   // --
 
   @Test
-  @DisplayName("Functional getMainActivityReferenceMetaBundleId should return Either with exact Left side for null document")
-  void requireMainActivityReferenceMetaBundleId_shouldFailForNullDocument() {
-    assertLeft(
-        ERR_CPM_DOCUMENT_NULL,
-        DocumentUtils.getMainActivityReferenceMetaBundleId((CpmDocument) null));
-  }
-
-  @Test
-  @DisplayName("Functional getMainActivityReferenceMetaBundleId should return Either with exact Left side when main activity is null")
+  @DisplayName("Functional getMainActivityReferencedMetaBundleId should return Either with exact Left side when main activity is null")
   void requireMainActivityReferenceMetaBundleId_shouldFailWhenMainActivityIsNull() {
     CpmDocument cpmDocument = mock(CpmDocument.class);
     when(cpmDocument.getMainActivity()).thenReturn(null);
 
+    Document document = mock(Document.class);
+    when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
+    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+
     assertLeft(
         ERR_MAIN_ACTIVITY_NULL,
-        DocumentUtils.getMainActivityReferenceMetaBundleId(cpmDocument));
+        document.getMainActivityReferencedMetaBundleId());
   }
 
   @Test
-  @DisplayName("Functional getMainActivityReferenceMetaBundleId should return Either with referenced id from main activity in Right side")
+  @DisplayName("Functional getMainActivityReferencedMetaBundleId should return Either with referenced id from main activity in Right side")
   void requireMainActivityReferenceMetaBundleId_shouldReturnReferencedIdFromMainActivity() {
-    QualifiedName expectedReference = provFactory.newQualifiedName("https://example.org/bundles/", "meta-bundle-2",
+    QualifiedName expectedReference = provFactory.newQualifiedName(
+        "https://example.org/bundles/",
+        "meta-bundle-2",
         "ex");
-    Element activityElement = elementWithReferencedMetaBundleId(expectedReference,
+    Element activityElement = elementWithReferencedMetaBundleId(
+        expectedReference,
         provFactory.getName().PROV_QUALIFIED_NAME);
 
     INode mainActivity = mock(INode.class);
@@ -186,7 +186,11 @@ class DocumentUtilsTest {
     CpmDocument cpmDocument = mock(CpmDocument.class);
     when(cpmDocument.getMainActivity()).thenReturn(mainActivity);
 
-    assertRight(expectedReference, DocumentUtils.getMainActivityReferenceMetaBundleId(cpmDocument));
+    Document document = mock(Document.class);
+    when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
+    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+
+    assertRight(expectedReference, document.getMainActivityReferencedMetaBundleId());
   }
 
   @Test
@@ -202,7 +206,7 @@ class DocumentUtilsTest {
   }
 
   @Test
-  @DisplayName("Reactive getMainActivityReferenceMetaBundleId should emit referenced value from Either Right side")
+  @DisplayName("Reactive getMainActivityReferencedMetaBundleId should emit referenced value from Either Right side")
   void getMainActivityReferenceMetaBundleId_shouldEmitReferencedId() {
     QualifiedName expectedReference = provFactory.newQualifiedName("https://example.org/bundles/", "meta-bundle-3",
         "ex");
@@ -215,7 +219,11 @@ class DocumentUtilsTest {
     CpmDocument cpmDocument = mock(CpmDocument.class);
     when(cpmDocument.getMainActivity()).thenReturn(mainActivity);
 
-    StepVerifier.create(MONO.fromEither(DocumentUtils.getMainActivityReferenceMetaBundleId(cpmDocument)))
+    Document document = mock(Document.class);
+    when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
+    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+
+    StepVerifier.create(MONO.fromEither(document.getMainActivityReferencedMetaBundleId()))
         .expectNext(expectedReference)
         .verifyComplete();
   }
