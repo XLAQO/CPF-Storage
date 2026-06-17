@@ -4,9 +4,9 @@ import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITH
 
 import java.util.List;
 
+import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
-import org.commonprovenance.framework.store.model.utils.DocumentUtils;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.QualifiedName;
 
@@ -61,7 +61,7 @@ public interface HasCpmDocument<T extends HasCpmDocument<T>> {
         .map(CpmDocument::getMainActivity)
         .flatMap(EITHER.makeSureNotNullWithMessage("MainActivity in CpmDocument can not be null!"))
         .map(INode::getAnyElement)
-        .flatMap(DocumentUtils::getCpmReferencedMetaBundleId);
+        .flatMap(ProvDocumentUtils::getCpmReferencedMetaBundleId);
   }
 
 }

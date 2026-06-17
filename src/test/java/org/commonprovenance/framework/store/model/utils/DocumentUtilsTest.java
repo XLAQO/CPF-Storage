@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.model.Document;
@@ -93,7 +94,7 @@ class DocumentUtilsTest {
   void requireCpmReferencedMetaBundleId_shouldFailForNullStatement() {
     assertLeft(
         ERR_STATEMENT_NULL,
-        DocumentUtils.getCpmReferencedMetaBundleId(null));
+        ProvDocumentUtils.getCpmReferencedMetaBundleId(null));
   }
 
   @Test
@@ -104,7 +105,7 @@ class DocumentUtilsTest {
 
     assertLeft(
         ERR_REFERENCED_META_MISSING,
-        DocumentUtils.getCpmReferencedMetaBundleId(hasOther));
+        ProvDocumentUtils.getCpmReferencedMetaBundleId(hasOther));
   }
 
   @Test
@@ -115,7 +116,7 @@ class DocumentUtilsTest {
         provFactory.getName().XSD_STRING);
 
     assertLeft(ERR_REFERENCED_META_WRONG_TYPE,
-        DocumentUtils.getCpmReferencedMetaBundleId(hasOther));
+        ProvDocumentUtils.getCpmReferencedMetaBundleId(hasOther));
   }
 
   // --
@@ -132,7 +133,7 @@ class DocumentUtilsTest {
         expectedReference,
         provFactory.getName().PROV_QUALIFIED_NAME);
 
-    assertRight(expectedReference, DocumentUtils.getCpmReferencedMetaBundleId(hasOther));
+    assertRight(expectedReference, ProvDocumentUtils.getCpmReferencedMetaBundleId(hasOther));
   }
 
   // --
@@ -149,7 +150,7 @@ class DocumentUtilsTest {
         expectedReference,
         provFactory.getName().PROV_QUALIFIED_NAME);
 
-    assertRight(expectedReference, DocumentUtils.getCpmReferencedBundleId(hasOther));
+    assertRight(expectedReference, ProvDocumentUtils.getCpmReferencedBundleId(hasOther));
   }
 
   // --
@@ -197,7 +198,7 @@ class DocumentUtilsTest {
   @DisplayName("Reactive getCpmReferencedMetaBundleId should propagate synchronous Either Left side value to reactive error channel")
 
   void getCpmReferencedMetaBundleId_shouldPropagateErrorToReactiveChannel() {
-    StepVerifier.create(MONO.fromEither(DocumentUtils.getCpmReferencedMetaBundleId(null)))
+    StepVerifier.create(MONO.fromEither(ProvDocumentUtils.getCpmReferencedMetaBundleId(null)))
         .expectErrorSatisfies((Throwable error) -> {
           assertInstanceOf(InternalApplicationException.class, error);
           assertEquals(ERR_STATEMENT_NULL, error.getMessage());

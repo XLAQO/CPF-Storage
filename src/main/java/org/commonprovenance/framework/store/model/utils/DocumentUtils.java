@@ -24,16 +24,6 @@ import io.vavr.control.Either;
 
 public final class DocumentUtils {
 
-  public static Function1<HasOther, Either<ApplicationException, QualifiedName>> getCpmAttributeValue(CpmAttribute attribute) {
-    return (HasOther hasOther) -> Either.<ApplicationException, HasOther> right(hasOther).flatMap(EITHER.<HasOther> makeSureNotNullWithMessage("Statement can not be null!"))
-        .map(statement -> CpmUtilities.getCpmAttributeValue(statement, attribute))
-        .flatMap(EITHER.makeSureNotNullWithMessage("Statement does not have '" + attribute.toString() + "' attribute, or its value is null!"))
-        .flatMap(EITHER.makeSure(
-            QualifiedName.class::isInstance,
-            attribute.toString() + " value is not instance of QualifiedName!"))
-        .map(QualifiedName.class::cast);
-  }
-
   public static Function1<CpmDocument, Either<ApplicationException, String>> serialize(Formats.ProvFormat format) {
     return cpmDocument -> Either.<ApplicationException, CpmDocument> right(cpmDocument)
         .map(CpmDocument::toDocument)
@@ -67,16 +57,6 @@ public final class DocumentUtils {
         && CpmUtilities.hasCpmType(entity, CpmType.FORWARD_CONNECTOR)
         && entity.getOther().isEmpty();
 
-  }
-
-  public static Either<ApplicationException, QualifiedName> getCpmReferencedMetaBundleId(HasOther hasOther) {
-    return Either.<ApplicationException, HasOther> right(hasOther)
-        .flatMap(DocumentUtils.getCpmAttributeValue(CpmAttribute.REFERENCED_META_BUNDLE_ID));
-  }
-
-  public static Either<ApplicationException, QualifiedName> getCpmReferencedBundleId(HasOther hasOther) {
-    return Either.<ApplicationException, HasOther> right(hasOther)
-        .flatMap(DocumentUtils.getCpmAttributeValue(CpmAttribute.REFERENCED_BUNDLE_ID));
   }
 
   public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
