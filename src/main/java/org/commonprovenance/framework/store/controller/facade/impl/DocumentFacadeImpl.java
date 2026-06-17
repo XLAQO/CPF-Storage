@@ -132,7 +132,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
   public Mono<DocumentResponseDTO> getDomainProvDocument(Organization organization) {
     return Mono.just(organization)
         .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
-        .flatMap(MONO.liftOptionalToMono(Document::getCpmDocument))
+        .flatMap(MONO.liftEffectToMono(Document::getCpmDocument))
         .map(cpm -> new CpmDocument(
             cpm.getBundleId(),
             Collections.emptyList(),
@@ -156,7 +156,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
   public Mono<DocumentResponseDTO> getBackboneProvDocument(Organization organization) {
     return Mono.just(organization)
         .flatMap(MONO.liftOptionalToMono(Organization::getDocument))
-        .flatMap(MONO.liftOptionalToMono(Document::getCpmDocument))
+        .flatMap(MONO.liftEffectToMono(Document::getCpmDocument))
         .map(cpm -> new CpmDocument(
             cpm.getBundleId(),
             cpm.getTraversalInformationPart(),

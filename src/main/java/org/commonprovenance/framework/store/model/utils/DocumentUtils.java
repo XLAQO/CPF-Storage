@@ -84,7 +84,8 @@ public final class DocumentUtils {
   }
 
   public static Either<ApplicationException, QualifiedName> getMainActivityReferenceMetaBundleId(Document document) {
-    return DocumentUtils.getCpmDocument(document)
+    return Either.<ApplicationException, Document> right(document)
+        .flatMap(Document::getCpmDocument)
         .flatMap(DocumentUtils::getMainActivityReferenceMetaBundleId);
   }
 
@@ -121,7 +122,7 @@ public final class DocumentUtils {
 
   public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
-        .flatMap(DocumentUtils::getCpmDocument)
+        .flatMap(Document::getCpmDocument)
         .flatMap(DocumentUtils::getBackwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
             DocumentUtils::isValidBackwardConnector,
@@ -144,7 +145,7 @@ public final class DocumentUtils {
 
   public static Either<ApplicationException, Void> checkForwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
-        .flatMap(DocumentUtils::getCpmDocument)
+        .flatMap(Document::getCpmDocument)
         .flatMap(DocumentUtils::getForwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
             DocumentUtils::isValidForwardConnector,
@@ -179,7 +180,7 @@ public final class DocumentUtils {
   public static Function1<Organization, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {
     return (Organization organization) -> Either.<ApplicationException, Organization> right(organization)
         .flatMap(EITHER.liftEitherOptional(Organization::getDocument))
-        .flatMap(DocumentUtils::getCpmDocument)
+        .flatMap(Document::getCpmDocument)
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getNamespaceURI)
         .flatMap(EITHER.makeSureNotNull(uri -> new InternalApplicationException("The bundle namespace uri '" + uri + "' does not resolve into known storage!!")))
@@ -189,15 +190,6 @@ public final class DocumentUtils {
             uri -> "The bundle namespace uri '" + uri + "' does not resolve into known storage!!"))
         .mapToVoid();
 
-  }
-
-  public static Either<ApplicationException, CpmDocument> getCpmDocument(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .map(Document::getCpmDocument)
-        .flatMap(EITHER::liftEither)
-        .mapLeft(ApplicationExceptionFactory.build(
-            InvalidValueException::new,
-            "CpmDocument is not present!"));
   }
 
 }

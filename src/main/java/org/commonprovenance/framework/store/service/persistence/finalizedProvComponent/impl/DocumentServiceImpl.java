@@ -2,6 +2,7 @@ package org.commonprovenance.framework.store.service.persistence.finalizedProvCo
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
+import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
@@ -13,10 +14,10 @@ import org.commonprovenance.framework.store.persistence.finalizedProvComponent.D
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.web.store.StoreWebService;
 import org.openprovenance.prov.model.Entity;
-import org.openprovenance.prov.model.QualifiedName;
 import org.springframework.stereotype.Service;
 
 import cz.muni.fi.cpm.model.CpmDocument;
+import io.vavr.control.Either;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -32,10 +33,9 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   private String getIdentifier(Document document) {
-    return document.getCpmDocument()
-        .map(CpmDocument::getBundleId)
-        .map(QualifiedName::toString)
-        .orElse("unknown");
+    return Either.<ApplicationException, Document> right(document)
+        .flatMap(Document::getIdentifier)
+        .getOrElse("unknown");
   }
 
   @Override
@@ -73,10 +73,7 @@ public class DocumentServiceImpl implements DocumentService {
         .flatMap(MONO.makeSureAsync(
             this::notExists,
             ConflictException::new,
-            doc -> doc.getIdentifier()
-                .fold(
-                    _ -> "Document exists!!",
-                    identifier -> "Document with identifier '" + identifier + "' exists!!")))
+            doc -> "Document with identifier '" + getIdentifier(doc) + "' exists!!"))
         .then();
   }
 
@@ -88,7 +85,7 @@ public class DocumentServiceImpl implements DocumentService {
   @Override
   public Mono<Void> checkSpecForwardConnectorsResolvable(Document document) {
     return MONO.makeSureNotNull(document)
-        .flatMap(MONO.liftEffectToMono(DocumentUtils::getCpmDocument))
+        .flatMap(MONO.liftEffectToMono(Document::getCpmDocument))
         .flatMapMany(MONO.<CpmDocument, Entity> liftEffectToFlux(DocumentUtils::getSpecForwardConnectors))
         .flatMap(MONO.makeSureAsync(
             storeWebService::pingBundleId,
@@ -107,7 +104,7 @@ public class DocumentServiceImpl implements DocumentService {
   @Override
   public Mono<Void> checkBackwardConnectorsResolvable(Document document) {
     return MONO.makeSureNotNull(document)
-        .flatMap(MONO.liftEffectToMono(DocumentUtils::getCpmDocument))
+        .flatMap(MONO.liftEffectToMono(Document::getCpmDocument))
         .flatMapMany(MONO.<CpmDocument, Entity> liftEffectToFlux(DocumentUtils::getBackwardConnectors))
         .flatMap(MONO.makeSureAsync(
             storeWebService::pingBundleId,

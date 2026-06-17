@@ -68,7 +68,7 @@ public class Document extends ValidatableDTO implements
     return new Document(
         graph,
         this.getFormat(),
-        this.getCpmDocument().orElse(null),
+        this.cpmDocument.orElse(null),
         this.getToken().orElse(null));
   }
 
@@ -76,7 +76,7 @@ public class Document extends ValidatableDTO implements
     return new Document(
         this.getGraph(),
         format,
-        this.getCpmDocument().orElse(null),
+        this.cpmDocument.orElse(null),
         this.getToken().orElse(null));
   }
 
@@ -105,7 +105,7 @@ public class Document extends ValidatableDTO implements
     return new Document(
         this.getGraph(),
         this.getFormat(),
-        this.getCpmDocument().orElse(null),
+        this.cpmDocument.orElse(null),
         token);
   }
 
@@ -127,8 +127,10 @@ public class Document extends ValidatableDTO implements
   }
 
   @Override
-  public Optional<CpmDocument> getCpmDocument() {
-    return cpmDocument;
+  public Either<ApplicationException, CpmDocument> getCpmDocument() {
+    return EITHER.liftEither(
+        cpmDocument,
+        new InvalidValueException("CpmDocument has not been deserialized yet"));
   }
 
   public Optional<Token> getToken() {

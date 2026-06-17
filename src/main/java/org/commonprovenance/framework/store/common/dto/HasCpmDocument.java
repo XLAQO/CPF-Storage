@@ -12,12 +12,10 @@ import cz.muni.fi.cpm.model.CpmDocument;
 import io.vavr.control.Either;
 
 public interface HasCpmDocument<T extends HasCpmDocument<T>> {
-  Optional<CpmDocument> getCpmDocument();
+  Either<ApplicationException, CpmDocument> getCpmDocument();
 
   default Either<ApplicationException, String> getIdentifier() {
-    return EITHER.liftEither(
-        getCpmDocument(),
-        new InvalidValueException("CpmDocument has not been deserialized yet"))
+    return getCpmDocument()
         .map(CpmDocument::getBundleId)
         .map(QualifiedName::getLocalPart);
   }
