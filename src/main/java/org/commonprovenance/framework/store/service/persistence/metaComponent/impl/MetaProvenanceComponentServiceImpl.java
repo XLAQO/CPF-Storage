@@ -2,6 +2,7 @@ package org.commonprovenance.framework.store.service.persistence.metaComponent.i
 
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
+import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
@@ -43,7 +44,8 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
         .flatMap(MONO.liftOptionalToMono(
             Organization::getDocument,
             _ -> new InvalidValueException("Document has not been deserialized yet!")))
-        .flatMap(MONO.liftEffectToMono(Document::getMainActivityReferencedMetaBundleId))
+        .flatMap(MONO.liftEffectToMono(Document::getMainActivity))
+        .flatMap(MONO.liftEffectToMono(ProvDocumentUtils::getCpmReferencedMetaBundleId))
         .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
         .map(QualifiedName::getLocalPart)
         .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' local part can not be null!"))
@@ -59,7 +61,8 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
                 _ -> new InvalidValueException("Document has not been deserialized yet!")))
-            .flatMap(MONO.liftEffectToMono(Document::getMainActivityReferencedMetaBundleId))
+            .flatMap(MONO.liftEffectToMono(Document::getMainActivity))
+            .flatMap(MONO.liftEffectToMono(ProvDocumentUtils::getCpmReferencedMetaBundleId))
             .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
             .map(QualifiedName::getLocalPart),
         Mono.just(organization)
@@ -87,7 +90,8 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
                 _ -> new InvalidValueException("Document has not been deserialized yet!")))
-            .flatMap(MONO.liftEffectToMono(Document::getMainActivityReferencedMetaBundleId))
+            .flatMap(MONO.liftEffectToMono(Document::getMainActivity))
+            .flatMap(MONO.liftEffectToMono(ProvDocumentUtils::getCpmReferencedMetaBundleId))
             .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
             .map(QualifiedName::getLocalPart),
         Mono.just(organization)

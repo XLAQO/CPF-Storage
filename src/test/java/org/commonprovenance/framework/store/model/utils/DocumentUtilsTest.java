@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.model.Document;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.openprovenance.prov.model.Activity;
 import org.openprovenance.prov.model.Element;
 import org.openprovenance.prov.model.HasOther;
 import org.openprovenance.prov.model.Other;
@@ -45,7 +47,7 @@ class DocumentUtilsTest {
   }
 
   private Element elementWithReferencedMetaBundleId(Object value, QualifiedName type) {
-    Element element = mock(Element.class, org.mockito.Mockito.withSettings().extraInterfaces(HasOther.class));
+    Element element = mock(Element.class, withSettings().extraInterfaces(HasOther.class));
     HasOther hasOther = (HasOther) element;
 
     Other referencedMetaBundleId = provFactory.newOther(
@@ -163,11 +165,12 @@ class DocumentUtilsTest {
 
     Document document = mock(Document.class);
     when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
-    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+    when(document.getMainActivity()).thenCallRealMethod();
 
     assertLeft(
         ERR_MAIN_ACTIVITY_NULL,
-        document.getMainActivityReferencedMetaBundleId());
+        document.getMainActivity()
+            .flatMap(ProvDocumentUtils::getCpmReferencedMetaBundleId));
   }
 
   @Test
@@ -177,9 +180,15 @@ class DocumentUtilsTest {
         "https://example.org/bundles/",
         "meta-bundle-2",
         "ex");
-    Element activityElement = elementWithReferencedMetaBundleId(
+
+    Activity activityElement = mock(Activity.class, withSettings().extraInterfaces(HasOther.class));
+    HasOther hasOther = (HasOther) activityElement;
+
+    Other referencedMetaBundleId = provFactory.newOther(
+        cpmAttributeName("referencedMetaBundleId"),
         expectedReference,
         provFactory.getName().PROV_QUALIFIED_NAME);
+    when(hasOther.getOther()).thenReturn(List.of(referencedMetaBundleId));
 
     INode mainActivity = mock(INode.class);
     when(mainActivity.getAnyElement()).thenReturn(activityElement);
@@ -189,9 +198,12 @@ class DocumentUtilsTest {
 
     Document document = mock(Document.class);
     when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
-    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+    when(document.getMainActivity()).thenCallRealMethod();
 
-    assertRight(expectedReference, document.getMainActivityReferencedMetaBundleId());
+    assertRight(
+        expectedReference,
+        document.getMainActivity()
+            .flatMap(ProvDocumentUtils::getCpmReferencedMetaBundleId));
   }
 
   @Test
@@ -209,10 +221,18 @@ class DocumentUtilsTest {
   @Test
   @DisplayName("Reactive getMainActivityReferencedMetaBundleId should emit referenced value from Either Right side")
   void getMainActivityReferenceMetaBundleId_shouldEmitReferencedId() {
-    QualifiedName expectedReference = provFactory.newQualifiedName("https://example.org/bundles/", "meta-bundle-3",
+    QualifiedName expectedReference = provFactory.newQualifiedName(
+        "https://example.org/bundles/",
+        "meta-bundle-3",
         "ex");
-    Element activityElement = elementWithReferencedMetaBundleId(expectedReference,
+    Activity activityElement = mock(Activity.class, withSettings().extraInterfaces(HasOther.class));
+    HasOther hasOther = (HasOther) activityElement;
+
+    Other referencedMetaBundleId = provFactory.newOther(
+        cpmAttributeName("referencedMetaBundleId"),
+        expectedReference,
         provFactory.getName().PROV_QUALIFIED_NAME);
+    when(hasOther.getOther()).thenReturn(List.of(referencedMetaBundleId));
 
     INode mainActivity = mock(INode.class);
     when(mainActivity.getAnyElement()).thenReturn(activityElement);
@@ -222,9 +242,10 @@ class DocumentUtilsTest {
 
     Document document = mock(Document.class);
     when(document.getCpmDocument()).thenReturn(Either.right(cpmDocument));
-    when(document.getMainActivityReferencedMetaBundleId()).thenCallRealMethod();
+    when(document.getMainActivity()).thenCallRealMethod();
 
-    StepVerifier.create(MONO.fromEither(document.getMainActivityReferencedMetaBundleId()))
+    StepVerifier.create(MONO.fromEither(document.getMainActivity()
+        .flatMap(ProvDocumentUtils::getCpmReferencedMetaBundleId)))
         .expectNext(expectedReference)
         .verifyComplete();
   }

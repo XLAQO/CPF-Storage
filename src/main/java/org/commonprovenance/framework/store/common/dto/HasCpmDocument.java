@@ -4,9 +4,9 @@ import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITH
 
 import java.util.List;
 
-import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
+import org.openprovenance.prov.model.Activity;
 import org.openprovenance.prov.model.Entity;
 import org.openprovenance.prov.model.QualifiedName;
 
@@ -56,12 +56,16 @@ public interface HasCpmDocument<T extends HasCpmDocument<T>> {
         .map(EITHER.traverse(Entity.class::cast));
   }
 
-  default Either<ApplicationException, QualifiedName> getMainActivityReferencedMetaBundleId() {
+  default Either<ApplicationException, Activity> getMainActivity() {
     return getCpmDocument()
         .map(CpmDocument::getMainActivity)
         .flatMap(EITHER.makeSureNotNullWithMessage("MainActivity in CpmDocument can not be null!"))
         .map(INode::getAnyElement)
-        .flatMap(ProvDocumentUtils::getCpmReferencedMetaBundleId);
+        .flatMap(EITHER.makeSure(
+            Activity.class::isInstance,
+            InvalidValueException::new,
+            element -> "Invalid element. Statement with id '" + element.getId().toString() + "' is not activity!"))
+        .map(Activity.class::cast);
   }
 
 }
