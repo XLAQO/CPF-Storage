@@ -97,15 +97,6 @@ public final class DocumentUtils {
         .flatMap(DocumentUtils::getCpmReferencedMetaBundleId);
   }
 
-  public static Either<ApplicationException, QualifiedName> getConnectorReferenceMetaBundleId(CpmDocument cpmDocument) {
-    return Either.<ApplicationException, CpmDocument> right(cpmDocument)
-        .flatMap(EITHER.<CpmDocument> makeSureNotNullWithMessage("CpmDocument can not be null!"))
-        .map(CpmDocument::getMainActivity)
-        .flatMap(EITHER.makeSureNotNullWithMessage("MainActivity in CpmDocument can not be null!"))
-        .map(INode::getAnyElement)
-        .flatMap(DocumentUtils::getCpmReferencedMetaBundleId);
-  }
-
   public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
         .flatMap(Document::getBackwardConnectors)
