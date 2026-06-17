@@ -130,22 +130,9 @@ public final class DocumentUtils {
         .mapToVoid();
   }
 
-  public static Either<ApplicationException, List<Entity>> getForwardConnectors(CpmDocument cpmDocument) {
-    return Either.<ApplicationException, CpmDocument> right(cpmDocument)
-        .flatMap(EITHER::makeSureNotNull)
-        .map(CpmDocument::getForwardConnectors)
-        .map(EITHER.traverse(INode::getAnyElement))
-        .flatMap(EITHER.traverseEither(EITHER.makeSure(
-            Entity.class::isInstance,
-            InvalidValueException::new,
-            element -> "Invalid connector. Statement with id '" + element.getId().toString() + "' is not entity!")))
-        .map(EITHER.traverse(Entity.class::cast));
-  }
-
   public static Either<ApplicationException, Void> checkForwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
-        .flatMap(Document::getCpmDocument)
-        .flatMap(DocumentUtils::getForwardConnectors)
+        .flatMap(Document::getForwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
             DocumentUtils::isValidForwardConnector,
             InvalidValueException::new,
