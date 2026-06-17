@@ -43,4 +43,16 @@ public interface HasCpmDocument<T extends HasCpmDocument<T>> {
             element -> "Invalid connector. Statement with id '" + element.getId().toString() + "' is not entity!")))
         .map(EITHER.traverse(Entity.class::cast));
   }
+
+  default Either<ApplicationException, List<Entity>> getBackwardConnectors() {
+    return getCpmDocument()
+        .map(CpmDocument::getBackwardConnectors)
+        .map(EITHER.traverse(INode::getAnyElement))
+        .flatMap(EITHER.traverseEither(EITHER.makeSure(
+            Entity.class::isInstance,
+            InvalidValueException::new,
+            element -> "Invalid connector. Statement with id '" + element.getId().toString() + "' is not entity!")))
+        .map(EITHER.traverse(Entity.class::cast));
+  }
+
 }

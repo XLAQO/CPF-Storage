@@ -9,14 +9,11 @@ import org.commonprovenance.framework.store.exceptions.InternalApplicationExcept
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
-import org.commonprovenance.framework.store.model.utils.DocumentUtils;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.web.store.StoreWebService;
-import org.openprovenance.prov.model.Entity;
 import org.springframework.stereotype.Service;
 
-import cz.muni.fi.cpm.model.CpmDocument;
 import io.vavr.control.Either;
 import reactor.core.publisher.Mono;
 
@@ -102,9 +99,8 @@ public class DocumentServiceImpl implements DocumentService {
 
   @Override
   public Mono<Void> checkBackwardConnectorsResolvable(Document document) {
-    return MONO.makeSureNotNull(document)
-        .flatMap(MONO.liftEffectToMono(Document::getCpmDocument))
-        .flatMapMany(MONO.<CpmDocument, Entity> liftEffectToFlux(DocumentUtils::getBackwardConnectors))
+    return Mono.just(document)
+        .flatMapMany(MONO.liftEffectToFlux(Document::getBackwardConnectors))
         .flatMap(MONO.makeSureAsync(
             storeWebService::pingBundleId,
             BadRequestException::new,

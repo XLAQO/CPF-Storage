@@ -106,23 +106,9 @@ public final class DocumentUtils {
         .flatMap(DocumentUtils::getCpmReferencedMetaBundleId);
   }
 
-  public static Either<ApplicationException, List<Entity>> getBackwardConnectors(CpmDocument cpmDocument) {
-    return Either.<ApplicationException, CpmDocument> right(cpmDocument)
-        .flatMap(EITHER::makeSureNotNull)
-        .map(CpmDocument::getBackwardConnectors)
-        .map(EITHER.traverse(INode::getAnyElement))
-        .flatMap(EITHER.traverseEither(EITHER.makeSure(
-            Entity.class::isInstance,
-            InvalidValueException::new,
-            element -> "Invalid connector. Statement with id '" + element.getId().toString() + "' is not entity!")))
-        .map(EITHER.traverse(Entity.class::cast));
-
-  }
-
   public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
-        .flatMap(Document::getCpmDocument)
-        .flatMap(DocumentUtils::getBackwardConnectors)
+        .flatMap(Document::getBackwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
             DocumentUtils::isValidBackwardConnector,
             InvalidValueException::new,
