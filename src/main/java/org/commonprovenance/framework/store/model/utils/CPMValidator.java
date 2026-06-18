@@ -2,6 +2,8 @@ package org.commonprovenance.framework.store.model.utils;
 
 import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
+import java.util.function.Function;
+
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
@@ -20,9 +22,9 @@ import cz.muni.fi.cpm.model.CpmUtilities;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 
-public final class DocumentUtils {
+public final class CPMValidator {
 
-  public static Boolean isValidBackwardConnector(HasOther connector) {
+  private static Boolean isValidBackwardConnector(HasOther connector) {
     return (connector instanceof Entity entity)
         && CpmUtilities.hasCpmType((Statement) entity, CpmType.BACKWARD_CONNECTOR)
         && CpmUtilities.containsCpmAttribute(entity, CpmAttribute.REFERENCED_BUNDLE_ID)
@@ -33,7 +35,7 @@ public final class DocumentUtils {
         && CpmUtilities.containsCpmAttribute(entity, CpmAttribute.HASH_ALG);
   }
 
-  public static Boolean isValidSpecForwardConnector(HasOther connector) {
+  private static Boolean isValidSpecForwardConnector(HasOther connector) {
     return (connector instanceof Entity entity)
         && CpmUtilities.hasCpmType(entity, CpmType.SPEC_FORWARD_CONNECTOR)
         && CpmUtilities.containsCpmAttribute(entity, CpmAttribute.REFERENCED_BUNDLE_ID)
@@ -44,34 +46,14 @@ public final class DocumentUtils {
         && CpmUtilities.containsCpmAttribute(entity, CpmAttribute.HASH_ALG);
   }
 
-  public static Boolean isValidForwardConnector(HasOther connector) {
+  private static Boolean isValidForwardConnector(HasOther connector) {
     return (connector instanceof Entity entity)
         && CpmUtilities.hasCpmType(entity, CpmType.FORWARD_CONNECTOR)
         && entity.getOther().isEmpty();
 
   }
 
-  public static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .flatMap(Document::getBackwardConnectors)
-        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            DocumentUtils::isValidBackwardConnector,
-            InvalidValueException::new,
-            element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
-        .mapToVoid();
-  }
-
-  public static Either<ApplicationException, Void> checkForwardConnetorsAttrs(Document document) {
-    return Either.<ApplicationException, Document> right(document)
-        .flatMap(Document::getForwardConnectors)
-        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            DocumentUtils::isValidForwardConnector,
-            InvalidValueException::new,
-            element -> "Entity '" + element.getId() + "' is not valid forward connector")))
-        .mapToVoid();
-  }
-
-  public static Function1<Organization, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {
+  private static Function1<Organization, Either<ApplicationException, Void>> checkBundleId(AppConfiguration configuration) {
     return (Organization organization) -> Either.<ApplicationException, Organization> right(organization)
         .flatMap(EITHER.liftEitherOptional(Organization::getDocument))
         .flatMap(Document::getCpmDocument)
@@ -86,13 +68,55 @@ public final class DocumentUtils {
 
   }
 
-  public static Either<ApplicationException, Void> checkSpecForwardConnetorsAttrs(Document document) {
+  private static Either<ApplicationException, Void> checkBackwardConnetorsAttrs(Document document) {
+    return Either.<ApplicationException, Document> right(document)
+        .flatMap(Document::getBackwardConnectors)
+        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
+            CPMValidator::isValidBackwardConnector,
+            InvalidValueException::new,
+            element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
+        .mapToVoid();
+  }
+
+  private static Either<ApplicationException, Void> checkForwardConnetorsAttrs(Document document) {
+    return Either.<ApplicationException, Document> right(document)
+        .flatMap(Document::getForwardConnectors)
+        .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
+            CPMValidator::isValidForwardConnector,
+            InvalidValueException::new,
+            element -> "Entity '" + element.getId() + "' is not valid forward connector")))
+        .mapToVoid();
+  }
+
+  private static Either<ApplicationException, Void> checkSpecForwardConnetorsAttrs(Document document) {
     return Either.<ApplicationException, Document> right(document)
         .flatMap(Document::getSpecForwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            DocumentUtils::isValidSpecForwardConnector,
+            CPMValidator::isValidSpecForwardConnector,
             InvalidValueException::new,
             element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
+        .mapToVoid();
+  }
+
+  private static Either<ApplicationException, Void> checkDocument(Organization organization) {
+    return Either.<ApplicationException, Organization> right(organization)
+        .flatMap(EITHER.liftEitherOptional(
+            Organization::getDocument,
+            _ -> new InvalidValueException("Document has not been loaded yet!")))
+        .flatMap(Document::getCpmDocument)
+        .mapToVoid();
+  }
+
+  public static Function<Organization, Either<ApplicationException, Void>>
+
+      validate(AppConfiguration configuration) {
+    return (organization) -> Either.<ApplicationException, Organization> right(organization)
+        .flatMap(EITHER.flatPeek(CPMValidator::checkDocument))
+        .flatMap(EITHER.flatPeek(CPMValidator.checkBundleId(configuration)))
+        .flatMap(EITHER.liftEitherOptional(Organization::getDocument))
+        .flatMap(EITHER.flatPeek(CPMValidator::checkSpecForwardConnetorsAttrs))
+        .flatMap(EITHER.flatPeek(CPMValidator::checkBackwardConnetorsAttrs))
+        .flatMap(EITHER.flatPeek(CPMValidator::checkForwardConnetorsAttrs))
         .mapToVoid();
   }
 }

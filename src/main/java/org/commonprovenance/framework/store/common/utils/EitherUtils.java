@@ -91,6 +91,10 @@ public interface EitherUtils {
                   + result.stream().reduce("", (acc, i) -> acc.isEmpty() ? i : acc + ", " + i)));
     }
 
+    public <R, T> Function1<R, Either<ApplicationException, R>> flatPeek(Function1<R, Either<ApplicationException, T>> check) {
+      return (R value) -> check.apply(value).map(_ -> value);
+    }
+
     public <R> Either<ApplicationException, R> valueOrException(R value, ApplicationException exception) {
       return (value == null)
           ? Either.left(exception)

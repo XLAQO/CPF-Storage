@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
+import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
 import org.commonprovenance.framework.store.controller.dto.response.DocumentResponseDTO;
@@ -19,7 +20,7 @@ import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.DocumentFactory;
-import org.commonprovenance.framework.store.model.utils.DocumentUtils;
+import org.commonprovenance.framework.store.model.utils.CPMValidator;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;
@@ -39,6 +40,7 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class DocumentFacadeImpl implements DocumentFacade {
+  private final AppConfig appConfig;
   private final String LOG_PREFIX = "DocumentFacade: ";
   private static final Logger LOGGER = LoggerFactory.getLogger(DocumentFacadeImpl.class);
 
@@ -65,7 +67,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
       ProvFactory provFactory,
       ICpmFactory cpmFactory,
       ICpmProvFactory cpmProvFactory,
-      AppConfiguration configuration) {
+      AppConfiguration configuration, AppConfig appConfig) {
     this.documentService = documentService;
     this.organizationService = organizationService;
     this.trustedPartyService = trustedPartyService;
@@ -78,6 +80,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
     this.cpmProvFactory = cpmProvFactory;
 
     this.configuration = configuration;
+    this.appConfig = appConfig;
 
   }
 
@@ -91,7 +94,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
         .delayUntil(this.trustedPartyWebService.verifySignature(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("{} Signature has been verified.", LOG_PREFIX))
-        .delayUntil(MONO.liftEffectToMono(DocumentUtils.checkBundleId(this.configuration)))
+        .delayUntil(MONO.liftEffectToMono(CPMValidator.validate(this.configuration)))
         .delayUntil(org -> Mono.just(org)
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
@@ -101,9 +104,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
             // check connectors
             .delayUntil(this.documentService::checkBackwardConnectorsResolvable)
             .delayUntil(this.documentService::checkSpecForwardConnectorsResolvable)
-            .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkSpecForwardConnetorsAttrs))
-            .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkBackwardConnetorsAttrs))
-            .delayUntil(MONO.liftEffectToMono(DocumentUtils::checkForwardConnetorsAttrs))
+
         // TODO: check hashes in connectors
         // TODO: check cpm constraints
         // TODO: check provenance constraints
