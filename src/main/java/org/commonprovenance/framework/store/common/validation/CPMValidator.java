@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.model.utils;
+package org.commonprovenance.framework.store.common.validation;
 
 import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
 
