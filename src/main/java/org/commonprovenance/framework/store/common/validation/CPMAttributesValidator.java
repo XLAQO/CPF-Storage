@@ -22,7 +22,7 @@ import cz.muni.fi.cpm.model.CpmUtilities;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 
-public final class CPMValidator {
+public final class CPMAttributesValidator {
 
   private static Boolean isValidBackwardConnector(HasOther connector) {
     return (connector instanceof Entity entity)
@@ -72,7 +72,7 @@ public final class CPMValidator {
     return Either.<ApplicationException, Document> right(document)
         .flatMap(Document::getBackwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            CPMValidator::isValidBackwardConnector,
+            CPMAttributesValidator::isValidBackwardConnector,
             InvalidValueException::new,
             element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
         .mapToVoid();
@@ -82,7 +82,7 @@ public final class CPMValidator {
     return Either.<ApplicationException, Document> right(document)
         .flatMap(Document::getForwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            CPMValidator::isValidForwardConnector,
+            CPMAttributesValidator::isValidForwardConnector,
             InvalidValueException::new,
             element -> "Entity '" + element.getId() + "' is not valid forward connector")))
         .mapToVoid();
@@ -92,7 +92,7 @@ public final class CPMValidator {
     return Either.<ApplicationException, Document> right(document)
         .flatMap(Document::getSpecForwardConnectors)
         .flatMap(EITHER.traverseEither(EITHER.<Entity> makeSure(
-            CPMValidator::isValidSpecForwardConnector,
+            CPMAttributesValidator::isValidSpecForwardConnector,
             InvalidValueException::new,
             element -> "Entity '" + element.getId() + "' is not valid specialized forward connector")))
         .mapToVoid();
@@ -107,16 +107,14 @@ public final class CPMValidator {
         .mapToVoid();
   }
 
-  public static Function<Organization, Either<ApplicationException, Void>>
-
-      validate(AppConfiguration configuration) {
+  public static Function<Organization, Either<ApplicationException, Void>> validate(AppConfiguration configuration) {
     return (organization) -> Either.<ApplicationException, Organization> right(organization)
-        .flatMap(EITHER.flatPeek(CPMValidator::checkDocument))
-        .flatMap(EITHER.flatPeek(CPMValidator.checkBundleId(configuration)))
+        .flatMap(EITHER.flatPeek(CPMAttributesValidator::checkDocument))
+        .flatMap(EITHER.flatPeek(CPMAttributesValidator.checkBundleId(configuration)))
         .flatMap(EITHER.liftEitherOptional(Organization::getDocument))
-        .flatMap(EITHER.flatPeek(CPMValidator::checkSpecForwardConnetorsAttrs))
-        .flatMap(EITHER.flatPeek(CPMValidator::checkBackwardConnetorsAttrs))
-        .flatMap(EITHER.flatPeek(CPMValidator::checkForwardConnetorsAttrs))
+        .flatMap(EITHER.flatPeek(CPMAttributesValidator::checkSpecForwardConnetorsAttrs))
+        .flatMap(EITHER.flatPeek(CPMAttributesValidator::checkBackwardConnetorsAttrs))
+        .flatMap(EITHER.flatPeek(CPMAttributesValidator::checkForwardConnetorsAttrs))
         .mapToVoid();
   }
 }

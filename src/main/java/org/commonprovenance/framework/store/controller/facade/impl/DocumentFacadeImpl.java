@@ -6,7 +6,7 @@ import java.util.Collections;
 
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
-import org.commonprovenance.framework.store.common.validation.CPMValidator;
+import org.commonprovenance.framework.store.common.validation.CPMAttributesValidator;
 import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
@@ -94,7 +94,7 @@ public class DocumentFacadeImpl implements DocumentFacade {
         .doOnNext(_ -> LOGGER.debug("{} Document has been deserialized and loaded.", LOG_PREFIX))
         .delayUntil(this.trustedPartyWebService.verifySignature(body.getSignature()))
         .doOnNext(_ -> LOGGER.debug("{} Signature has been verified.", LOG_PREFIX))
-        .delayUntil(MONO.liftEffectToMono(CPMValidator.validate(this.configuration)))
+        .delayUntil(MONO.liftEffectToMono(CPMAttributesValidator.validate(this.configuration)))
         .delayUntil(org -> Mono.just(org)
             .flatMap(MONO.liftOptionalToMono(
                 Organization::getDocument,
