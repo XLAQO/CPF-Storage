@@ -10,7 +10,7 @@ import org.commonprovenance.framework.store.common.dto.HasGraph;
 import org.commonprovenance.framework.store.common.dto.HasTokenOptional;
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
-import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
+import org.commonprovenance.framework.store.common.validation.DTOValidator;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
@@ -24,7 +24,7 @@ import cz.muni.fi.cpm.model.ICpmProvFactory;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 
-public class Document extends ValidatableDTO implements
+public class Document extends DTOValidator implements
     HasCpmDocument<Document>,
     HasGraph<Document>,
     HasFormat<Document>,

@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
+import org.commonprovenance.framework.store.common.validation.DTOValidator;
 import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.ConstraintException;
@@ -82,7 +82,7 @@ public interface EitherUtils {
               .orElse("unknown"));
     }
 
-    public <R extends ValidatableDTO> Either<ApplicationException, R> validateDTO(R value) {
+    public <R extends DTOValidator> Either<ApplicationException, R> validateDTO(R value) {
       Vector<String> result = value.validate();
       return result.isEmpty()
           ? Either.right(value)

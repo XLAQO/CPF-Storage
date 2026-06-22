@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import org.commonprovenance.framework.store.common.utils.Base64Utils;
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
+import org.commonprovenance.framework.store.common.validation.CPMValidator;
 import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.config.AppConfiguration;
 import org.commonprovenance.framework.store.controller.dto.form.DocumentFormDTO;
@@ -20,7 +21,6 @@ import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.DocumentFactory;
-import org.commonprovenance.framework.store.model.utils.CPMValidator;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.OrganizationService;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.TrustedPartyService;

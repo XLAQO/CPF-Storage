@@ -8,7 +8,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.commonprovenance.framework.store.common.validation.ValidatableDTO;
+import org.commonprovenance.framework.store.common.validation.DTOValidator;
 import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
@@ -76,7 +76,7 @@ public interface PublisherHelper {
               .orElse("unknown"));
     }
 
-    public <T extends ValidatableDTO> Mono<T> validateDTO(T value) {
+    public <T extends DTOValidator> Mono<T> validateDTO(T value) {
       Vector<String> result = value.validate();
       return result.isEmpty()
           ? Mono.just(value)
