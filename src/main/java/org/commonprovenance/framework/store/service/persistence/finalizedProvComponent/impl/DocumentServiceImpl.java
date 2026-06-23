@@ -3,17 +3,13 @@ package org.commonprovenance.framework.store.service.persistence.finalizedProvCo
 import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
 
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
-import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
-import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
-import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
 import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.DocumentRepository;
 import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.DocumentService;
-import org.commonprovenance.framework.store.service.web.store.StoreWebService;
 import org.springframework.stereotype.Service;
 
 import io.vavr.control.Either;
@@ -22,13 +18,10 @@ import reactor.core.publisher.Mono;
 @Service
 public class DocumentServiceImpl implements DocumentService {
   private final DocumentRepository repository;
-  private final StoreWebService storeWebService;
 
   public DocumentServiceImpl(
-      DocumentRepository repository,
-      StoreWebService storeWebService) {
+      DocumentRepository repository) {
     this.repository = repository;
-    this.storeWebService = storeWebService;
   }
 
   private String getIdentifier(Document document) {
