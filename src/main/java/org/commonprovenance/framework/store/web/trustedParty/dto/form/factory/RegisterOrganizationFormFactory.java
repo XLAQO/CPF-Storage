@@ -5,7 +5,7 @@ import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITH
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.commonprovenance.framework.store.common.composition.MonoidComposition;
+import org.commonprovenance.framework.store.common.composition.Monoid;
 import org.commonprovenance.framework.store.common.dto.HasClientCertificate;
 import org.commonprovenance.framework.store.common.dto.HasIdentifier;
 import org.commonprovenance.framework.store.common.dto.HasIntermediateCertificates;
@@ -18,7 +18,7 @@ import io.vavr.control.Either;
 
 public class RegisterOrganizationFormFactory {
   private static <T extends HasIdentifier<T> & HasClientCertificate<T> & HasIntermediateCertificates<T>> UnaryOperator<RegisterOrganizationTPFormDTO> mapper(T data) {
-    return MonoidComposition.<RegisterOrganizationTPFormDTO> composeOperators(
+    return Monoid.<RegisterOrganizationTPFormDTO> composeOperators(
         List.of(
             HasOrganizationId.addOrganizationId(data),
             HasClientCertificate.addClientCertificate(data),

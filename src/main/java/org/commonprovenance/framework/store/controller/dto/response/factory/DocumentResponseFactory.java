@@ -3,7 +3,7 @@ package org.commonprovenance.framework.store.controller.dto.response.factory;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.commonprovenance.framework.store.common.composition.MonoidComposition;
+import org.commonprovenance.framework.store.common.composition.Monoid;
 import org.commonprovenance.framework.store.common.dto.HasGraph;
 import org.commonprovenance.framework.store.common.dto.HasTokenOptional;
 import org.commonprovenance.framework.store.controller.dto.response.DocumentResponseDTO;
@@ -11,7 +11,7 @@ import org.commonprovenance.framework.store.controller.dto.response.DocumentResp
 public class DocumentResponseFactory {
 
   private static <T extends HasGraph<T> & HasTokenOptional<T>> UnaryOperator<DocumentResponseDTO> mapper(T data) {
-    return (DocumentResponseDTO response) -> MonoidComposition.compose(
+    return (DocumentResponseDTO response) -> Monoid.compose(
         response,
         List.of(
             data.putGraphToDTO(),

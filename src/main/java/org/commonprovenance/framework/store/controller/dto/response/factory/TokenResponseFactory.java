@@ -5,7 +5,7 @@ import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITH
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.commonprovenance.framework.store.common.composition.MonoidComposition;
+import org.commonprovenance.framework.store.common.composition.Monoid;
 import org.commonprovenance.framework.store.common.dto.HasJwtToken;
 import org.commonprovenance.framework.store.controller.dto.response.TokenResponseDTO;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
@@ -17,7 +17,7 @@ import io.vavr.control.Either;
 
 public class TokenResponseFactory {
   private static <T extends HasJwtToken<T>> UnaryOperator<TokenResponseDTO> mapper(T data) {
-    return (TokenResponseDTO response) -> MonoidComposition.compose(
+    return (TokenResponseDTO response) -> Monoid.compose(
         response,
         List.of(data.putJwtToDTO()));
   }
