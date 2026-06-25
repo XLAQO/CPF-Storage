@@ -3,16 +3,13 @@ package org.commonprovenance.framework.store.common.composition;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Vector;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import org.commonprovenance.framework.store.common.validation.DTOValidator;
 import org.commonprovenance.framework.store.config.AppConfig;
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
-import org.commonprovenance.framework.store.exceptions.ConstraintException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 
 import io.vavr.Function1;
@@ -22,7 +19,7 @@ import io.vavr.control.Try;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public interface PublisherHelper {
+public interface Reactor {
   MonoHelper MONO = MonoHelper.get();
 
   // Mono implementation
@@ -74,15 +71,6 @@ public interface PublisherHelper {
               .findFirst()
               .map(frame -> frame.getClassName() + "#" + frame.getMethodName() + ":" + frame.getLineNumber())
               .orElse("unknown"));
-    }
-
-    public <T extends DTOValidator> Mono<T> validateDTO(T value) {
-      Vector<String> result = value.validate();
-      return result.isEmpty()
-          ? Mono.just(value)
-          : Mono.error(new ConstraintException(
-              "Validation of class '" + value.getClass().getSimpleName() + "' faild with message: "
-                  + result.stream().reduce("", (acc, i) -> acc.isEmpty() ? i : acc + ", " + i)));
     }
 
     public <T> Mono<T> makeSureNotNull(T value) {

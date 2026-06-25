@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.config;
 
-import org.commonprovenance.framework.store.common.composition.PublisherHelper.MonoHelper;
+import org.commonprovenance.framework.store.common.composition.Reactor.MonoHelper;
 import org.commonprovenance.framework.store.common.utils.EitherUtils.EitherHelper;
 import org.openprovenance.prov.vanilla.ProvFactory;
 import org.springframework.context.annotation.Bean;

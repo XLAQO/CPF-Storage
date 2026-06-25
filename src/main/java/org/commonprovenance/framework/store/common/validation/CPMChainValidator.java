@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.common.validation;
 
-import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.Reactor.MONO;
 
 import java.util.function.Function;
 

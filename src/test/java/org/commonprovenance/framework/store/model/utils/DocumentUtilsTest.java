@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.model.utils;
 
-import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.Reactor.MONO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

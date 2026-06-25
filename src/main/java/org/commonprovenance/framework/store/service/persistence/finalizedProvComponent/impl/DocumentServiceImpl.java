@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.impl;
 
-import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.Reactor.MONO;
 
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.ConflictException;
