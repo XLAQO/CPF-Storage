@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.service.web.store.impl;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
 
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.exceptions.ConstraintException;

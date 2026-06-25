@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.controller.facade.impl;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
 
 import java.util.Collections;
 

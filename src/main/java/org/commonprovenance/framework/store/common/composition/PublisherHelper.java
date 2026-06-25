@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.common.publisher;
+package org.commonprovenance.framework.store.common.composition;
 
 import java.util.List;
 import java.util.Objects;

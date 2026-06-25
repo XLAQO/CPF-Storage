@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.persistence.metaComponent.neo4j;
 
-import static org.commonprovenance.framework.store.common.publisher.PublisherHelper.MONO;
+import static org.commonprovenance.framework.store.common.composition.PublisherHelper.MONO;
 
 import java.util.function.Function;
 
