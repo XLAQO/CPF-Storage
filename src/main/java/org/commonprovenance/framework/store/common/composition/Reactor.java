@@ -20,17 +20,17 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface Reactor {
-  MonoHelper MONO = MonoHelper.get();
+  ReactorComposition MONO = ReactorComposition.get();
 
   // Mono implementation
-  class MonoHelper {
+  class ReactorComposition {
     private static class Holder {
-      static MonoHelper instance = new MonoHelper(false);
+      static ReactorComposition instance = new ReactorComposition(false);
     }
 
     private final boolean verboseMode;
 
-    private MonoHelper(boolean verboseMode) {
+    private ReactorComposition(boolean verboseMode) {
       this.verboseMode = verboseMode;
     }
 
@@ -38,10 +38,10 @@ public interface Reactor {
      * Initializes the singleton with the configured value. Should be called exactly once during application startup from {@link AppConfig}.
      */
     public static void initialize(boolean verboseMode) {
-      Holder.instance = new MonoHelper(verboseMode);
+      Holder.instance = new ReactorComposition(verboseMode);
     }
 
-    static MonoHelper get() {
+    static ReactorComposition get() {
       return Holder.instance;
     }
 
@@ -67,7 +67,7 @@ public interface Reactor {
     private String callerLocation() {
       return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
           .walk(frames -> frames
-              .dropWhile(frame -> frame.getClassName().equals(MonoHelper.class.getName()))
+              .dropWhile(frame -> frame.getClassName().equals(ReactorComposition.class.getName()))
               .findFirst()
               .map(frame -> frame.getClassName() + "#" + frame.getMethodName() + ":" + frame.getLineNumber())
               .orElse("unknown"));

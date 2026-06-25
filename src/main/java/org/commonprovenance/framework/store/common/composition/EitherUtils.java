@@ -30,16 +30,16 @@ import io.vavr.control.Either;
 import io.vavr.control.Try;
 
 public interface EitherUtils {
-  EitherHelper EITHER = EitherHelper.get();
+  EitherComposition EITHER = EitherComposition.get();
 
-  class EitherHelper {
+  class EitherComposition {
     private static class Holder {
-      static EitherHelper instance = new EitherHelper(false);
+      static EitherComposition instance = new EitherComposition(false);
     }
 
     private final boolean verboseMode;
 
-    private EitherHelper(boolean verboseMode) {
+    private EitherComposition(boolean verboseMode) {
       this.verboseMode = verboseMode;
     }
 
@@ -47,10 +47,10 @@ public interface EitherUtils {
      * Initializes the singleton with the configured value. Should be called exactly once during application startup from {@link AppConfig}.
      */
     public static void initialize(boolean verboseMode) {
-      Holder.instance = new EitherHelper(verboseMode);
+      Holder.instance = new EitherComposition(verboseMode);
     }
 
-    static EitherHelper get() {
+    static EitherComposition get() {
       return Holder.instance;
     }
 
@@ -76,7 +76,7 @@ public interface EitherUtils {
     private String callerLocation() {
       return StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
           .walk(frames -> frames
-              .dropWhile(frame -> frame.getClassName().equals(EitherHelper.class.getName()))
+              .dropWhile(frame -> frame.getClassName().equals(EitherComposition.class.getName()))
               .findFirst()
               .map(frame -> frame.getClassName() + "#" + frame.getMethodName() + ":" + frame.getLineNumber())
               .orElse("unknown"));
