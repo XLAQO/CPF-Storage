@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.common.utils;
 
-import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
+import static org.commonprovenance.framework.store.common.composition.EitherUtils.EITHER;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

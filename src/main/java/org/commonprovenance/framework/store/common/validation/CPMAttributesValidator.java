@@ -1,6 +1,6 @@
 package org.commonprovenance.framework.store.common.validation;
 
-import static org.commonprovenance.framework.store.common.utils.EitherUtils.EITHER;
+import static org.commonprovenance.framework.store.common.composition.EitherUtils.EITHER;
 
 import java.util.function.Function;
 

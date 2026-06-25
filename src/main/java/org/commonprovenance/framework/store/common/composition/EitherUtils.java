@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.common.utils;
+package org.commonprovenance.framework.store.common.composition;
 
 import java.util.ArrayList;
 import java.util.List;
