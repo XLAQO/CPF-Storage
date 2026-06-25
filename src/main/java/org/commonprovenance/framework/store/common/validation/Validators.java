@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.common.utils;
+package org.commonprovenance.framework.store.common.validation;
 
 import java.util.regex.Pattern;
 

@@ -1,9 +1,9 @@
 package org.commonprovenance.framework.store.controller.validator;
 
+import org.commonprovenance.framework.store.common.validation.Validators;
+
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
-import org.commonprovenance.framework.store.common.utils.Validators;
 
 public class IsUUIDValidator implements ConstraintValidator<IsUUID, String> {
 
