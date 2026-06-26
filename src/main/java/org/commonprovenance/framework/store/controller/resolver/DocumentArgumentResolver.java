@@ -9,7 +9,7 @@ import org.commonprovenance.framework.store.controller.resolver.annotation.LoadD
 import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.model.Document;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.FinalizedProvComponentService;
+import org.commonprovenance.framework.store.service.persistence.FinalizedProvComponentService;
 import org.openprovenance.prov.model.ProvFactory;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;

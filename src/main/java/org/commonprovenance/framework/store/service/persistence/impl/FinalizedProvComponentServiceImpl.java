@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.impl;
+package org.commonprovenance.framework.store.service.persistence.impl;
 
 import static org.commonprovenance.framework.store.common.composition.Reactor.MONO;
 
@@ -12,7 +12,7 @@ import org.commonprovenance.framework.store.persistence.finalizedProvComponent.D
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.OrganizationRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TokenRepository;
 import org.commonprovenance.framework.store.persistence.finalizedProvComponent.TrustedPartyRepository;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.FinalizedProvComponentService;
+import org.commonprovenance.framework.store.service.persistence.FinalizedProvComponentService;
 import org.springframework.stereotype.Service;
 
 import jakarta.ws.rs.NotFoundException;

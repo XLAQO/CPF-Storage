@@ -20,7 +20,7 @@ import org.commonprovenance.framework.store.model.Document;
 import org.commonprovenance.framework.store.model.Format;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.factory.DocumentFactory;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.impl.FinalizedProvComponentServiceImpl;
+import org.commonprovenance.framework.store.service.persistence.impl.FinalizedProvComponentServiceImpl;
 import org.commonprovenance.framework.store.service.persistence.metaComponent.MetaProvenanceComponentService;
 import org.commonprovenance.framework.store.service.web.store.StoreWebService;
 import org.commonprovenance.framework.store.service.web.trustedParty.TrustedPartyWebService;

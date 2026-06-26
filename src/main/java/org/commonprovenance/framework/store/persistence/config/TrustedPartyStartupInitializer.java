@@ -3,7 +3,7 @@ package org.commonprovenance.framework.store.persistence.config;
 import java.util.Optional;
 
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.FinalizedProvComponentService;
+import org.commonprovenance.framework.store.service.persistence.FinalizedProvComponentService;
 import org.commonprovenance.framework.store.web.trustedParty.TrustedPartyWeb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

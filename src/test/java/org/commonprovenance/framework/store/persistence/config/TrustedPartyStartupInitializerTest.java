@@ -9,7 +9,7 @@ import java.util.Optional;
 
 import org.commonprovenance.framework.store.exceptions.NotFoundException;
 import org.commonprovenance.framework.store.model.TrustedParty;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.FinalizedProvComponentService;
+import org.commonprovenance.framework.store.service.persistence.FinalizedProvComponentService;
 import org.commonprovenance.framework.store.web.trustedParty.TrustedPartyWeb;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

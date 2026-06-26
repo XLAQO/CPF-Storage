@@ -10,7 +10,7 @@ import org.commonprovenance.framework.store.exceptions.ApplicationException;
 import org.commonprovenance.framework.store.exceptions.BadRequestException;
 import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.model.utils.OrganizationUtils;
-import org.commonprovenance.framework.store.service.persistence.finalizedProvComponent.FinalizedProvComponentService;
+import org.commonprovenance.framework.store.service.persistence.FinalizedProvComponentService;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.BindingContext;
