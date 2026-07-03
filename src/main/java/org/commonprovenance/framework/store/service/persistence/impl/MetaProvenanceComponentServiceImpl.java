@@ -1,4 +1,4 @@
-package org.commonprovenance.framework.store.service.persistence.metaComponent.impl;
+package org.commonprovenance.framework.store.service.persistence.impl;
 
 import static org.commonprovenance.framework.store.common.composition.Reactor.MONO;
 
@@ -12,7 +12,7 @@ import org.commonprovenance.framework.store.model.Organization;
 import org.commonprovenance.framework.store.persistence.metaComponent.EntityRepository;
 import org.commonprovenance.framework.store.persistence.metaComponent.MetaBundleRepository;
 import org.commonprovenance.framework.store.persistence.metaComponent.model.factory.NodeToProvFactory;
-import org.commonprovenance.framework.store.service.persistence.metaComponent.MetaProvenanceComponentService;
+import org.commonprovenance.framework.store.service.persistence.MetaProvenanceComponentService;
 import org.openprovenance.prov.model.QualifiedName;
 import org.springframework.stereotype.Service;
 
