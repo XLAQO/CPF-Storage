@@ -14,7 +14,5 @@ public interface MetaProvenanceComponentService {
 
   Mono<Boolean> metaProvenanceComponentExists(String metaBundleIdentifier);
 
-  Mono<Boolean> metaProvenanceComponentNotExists(String metaBundleIdentifier);
-
   Mono<org.openprovenance.prov.model.Document> getMetaProvenanceComponent(String metaBundleIdentifier);
 }

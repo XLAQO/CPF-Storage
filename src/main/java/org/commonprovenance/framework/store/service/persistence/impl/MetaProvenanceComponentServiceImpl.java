@@ -4,6 +4,7 @@ import static org.commonprovenance.framework.store.common.composition.Reactor.MO
 
 import org.commonprovenance.framework.store.common.utils.ProvDocumentUtils;
 import org.commonprovenance.framework.store.config.AppConfiguration;
+import org.commonprovenance.framework.store.exceptions.ConflictException;
 import org.commonprovenance.framework.store.exceptions.InternalApplicationException;
 import org.commonprovenance.framework.store.exceptions.InvalidValueException;
 import org.commonprovenance.framework.store.exceptions.factory.ApplicationExceptionFactory;
@@ -48,8 +49,8 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
         .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' can not be null!"))
         .map(QualifiedName::getLocalPart)
         .flatMap(MONO.makeSureNotNullWithMessage("'referenceMetaBundleId' local part can not be null!"))
-        .flatMap(MONO.makeSureBefore(
-            this::metaProvenanceComponentNotExists,
+        .flatMap(MONO.makeSureNotBefore(
+            this.metaBundleRepository::existsByIdentifier,
             this.metaBundleRepository::create));
   }
 
@@ -113,12 +114,6 @@ public class MetaProvenanceComponentServiceImpl implements MetaProvenanceCompone
     return MONO.<String> makeSureNotNullWithMessage("")
         .apply(metaBundleIdentifier)
         .flatMap(metaBundleRepository::existsByIdentifier);
-  }
-
-  @Override
-  public Mono<Boolean> metaProvenanceComponentNotExists(String metaBundleIdentifier) {
-    return this.metaProvenanceComponentExists(metaBundleIdentifier)
-        .map(value -> !value);
   }
 
   @Override
