@@ -116,7 +116,7 @@ jobs:
           install -d "$RUNNER_TEMP/chart"
           cp -R helm/. "$RUNNER_TEMP/chart/"
           yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' helm/values.yaml values/qa.yaml > "$RUNNER_TEMP/chart/values.yaml"
-          helm package "$RUNNER_TEMP/chart" --destination "$RUNNER_TEMP"
+          helm package "$RUNNER_TEMP/chart" --app-version "$GITHUB_SHA" --destination "$RUNNER_TEMP"
 
       - name: Push Helm Chart to Harbor
         env:
